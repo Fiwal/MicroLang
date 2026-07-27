@@ -1,76 +1,71 @@
 section .data
-fmt_out_int? db "%d", 10, 0
-num? dq 10
-%define num [num?]
+fmt_int? db "%d", 0
+new_line db 10, 0
+num_prompt_1 db "a: ", 0
+num_prompt_2 db "b: ", 0
+add_prompt db "a + b = ", 0
+sub_prompt db "a - b = ", 0
 section .bss
-num_2? resq 1
-%define num_2 [num_2?]
 section .text
 global main
 extern printf
+extern scanf
 %define return_value rax
-print_int:
-mov rsi, rdi
-mov rdi, fmt_out_int?
-xor rax, rax
-call printf
-ret
-operation:
-push rbp
-mov rbp, rsp
-sub rsp, 48
-%define parameter_1 [rbp-8]
-mov parameter_1, rdi
-%define parameter_2 [rbp-16]
-mov parameter_2, rsi
-%define parameter_3 [rbp-24]
-mov parameter_3, rdx
-%define parameter_4 [rbp-32]
-mov parameter_4, rcx
-%define result [rbp-40]
-mov rax, parameter_1
-mov result, rax
-mov rax, parameter_2
-add result, rax
-mov rax, result
-imul rax, parameter_3
-mov result, rax
-mov rax, parameter_4
-sub result, rax
-mov rax, result
-imul rax, -1
-mov result, rax
-mov rax, result
-jmp .end
-.end:
-%undef parameter_1
-%undef parameter_2
-%undef parameter_3
-%undef parameter_4
-%undef result
-mov rsp, rbp
-pop rbp
-ret
 main:
 push rbp
 mov rbp, rsp
-sub rsp, 16
+sub rsp, 32
 %define a [rbp-8]
-mov rax, 5
-mov a, rax
-mov rax, 12
-mov num_2, rax
-mov rdi, a
-mov rsi, num
-mov rdx, num_2
-mov rcx, 7
-call operation
-mov rdi, return_value
-call print_int
+%define b [rbp-16]
+mov rdi, num_prompt_1
+xor rax, rax
+call printf
+mov rdi, fmt_int?
+lea rsi, a
+xor rax, rax
+call scanf
+mov rdi, num_prompt_2
+xor rax, rax
+call printf
+mov rdi, fmt_int?
+lea rsi, b
+xor rax, rax
+call scanf
+%define c [rbp-24]
+mov rax, a
+mov c, rax
+mov rax, b
+add c, rax
+mov rdi, add_prompt
+xor rax, rax
+call printf
+mov rdi, fmt_int?
+mov rsi, c
+xor rax, rax
+call printf
+mov rdi, new_line
+xor rax, rax
+call printf
+mov rax, a
+mov c, rax
+mov rax, b
+sub c, rax
+mov rdi, sub_prompt
+xor rax, rax
+call printf
+mov rdi, fmt_int?
+mov rsi, c
+xor rax, rax
+call printf
+mov rdi, new_line
+xor rax, rax
+call printf
 mov rax, 0
 jmp .end
 .end:
 %undef a
+%undef b
+%undef c
 mov rsp, rbp
 pop rbp
 ret

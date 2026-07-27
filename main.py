@@ -12,6 +12,7 @@ class Lexer:
         self.current_arguments = []
         self.is_comment = False
         self.current_line = 1
+        self.in_quotes = False
 
     def tokenize(self):
         for char in self.source:
@@ -20,10 +21,18 @@ class Lexer:
             elif char == "\n" and self.is_comment:
                 self.is_comment = False
 
+            if char == '"' and not self.in_quotes:
+                self.in_quotes = True
+            elif char == '"' and self.in_quotes:
+                self.in_quotes = False
+
+            if self.in_quotes:
+                self.buffer += char
+
             if char == "\n":
                 self.current_line += 1
 
-            if not char.isspace() and not self.is_comment:
+            if not char.isspace() and not self.is_comment and not self.in_quotes:
                 match char:
                     case ":":
                         self.capture_instruction_name()
@@ -112,6 +121,8 @@ class Parser:
                 self.program["uninitialized_global_variables"].append({"type": "int", "name": token['arguments'][0]})
             elif len(token['arguments']) == 2:
                 self.program["initialized_global_variables"].append({"type": "int", "name": token['arguments'][0], "value": token['arguments'][1]})
+        elif token['instruction'] == "string":
+            self.program["initialized_global_variables"].append({"type": "string", "name": token['arguments'][0], "value": token['arguments'][1]})
 
 class Compiler:
     def __init__(self, program):
@@ -127,19 +138,19 @@ class Compiler:
 
     def section_text(self):
         self.add_assembly_code("section .data\n")
-        self.add_assembly_code("fmt_out_int? db \"%d\", 10, 0\n")
+        self.add_assembly_code("fmt_int? db \"%d\", 0\nnew_line db 10, 0\n")
         for var in self.program["initialized_global_variables"]:
             if var['type'] == 'int':
                 self.add_assembly_code(f"{var['name']}? dq {var['value']}\n%define {var['name']} [{var['name']}?]\n")
+            if var['type'] == 'string':
+                self.add_assembly_code(f"{var['name']} db {var['value']}, 0\n")
 
         self.add_assembly_code("section .bss\n")
         for var in self.program["uninitialized_global_variables"]:
             if var['type'] == 'int':
                 self.add_assembly_code(f"{var['name']}? resq 1\n%define {var['name']} [{var['name']}?]\n")
 
-        self.add_assembly_code("section .text\nglobal main\nextern printf\n%define return_value rax\n")
-
-        self.add_assembly_code("print_int:\nmov rsi, rdi\nmov rdi, fmt_out_int?\nxor rax, rax\ncall printf\nret\n")
+        self.add_assembly_code("section .text\nglobal main\nextern printf\nextern scanf\n%define return_value rax\n")
 
         for i in self.program["functions"]:
             self.add_assembly_code(f"{i.name}:\npush rbp\nmov rbp, rsp\n")
@@ -168,6 +179,16 @@ class Compiler:
                     self.add_assembly_code(f"mov rax, {j['arguments'][1]}\nsub {j['arguments'][0]}, rax\n")
                 elif j["instruction"] == "mul":
                     self.add_assembly_code(f"mov rax, {j['arguments'][0]}\nimul rax, {j['arguments'][1]}\nmov {j['arguments'][0]}, rax\n")
+                elif j["instruction"] == "div":
+                    self.add_assembly_code(f"mov rax, {j['arguments'][0]}\ncqo\nmov rbx, {j['arguments'][1]}\nidiv rbx\nmov {j['arguments'][0]}, rax\n")
+                elif j["instruction"] == "mod":
+                    self.add_assembly_code(f"mov rax, {j['arguments'][0]}\ncqo\nmov rbx, {j['arguments'][1]}\nidiv rbx\nmov {j['arguments'][0]}, rdx\n")
+                elif j["instruction"] == "print_int":
+                    self.add_assembly_code(f"mov rdi, fmt_int?\nmov rsi, {j['arguments'][0]}\nxor rax, rax\ncall printf\n")
+                elif j["instruction"] == "input_int":
+                    self.add_assembly_code(f"mov rdi, fmt_int?\nlea rsi, {j['arguments'][0]}\nxor rax, rax\ncall scanf\n")
+                elif j["instruction"] == "print":
+                    self.add_assembly_code(f"mov rdi, {j['arguments'][0]}\nxor rax, rax\ncall printf\n")
                 elif j["instruction"] == "return":
                     self.add_assembly_code(f"mov rax, {j['arguments'][0]}\njmp .end\n")
                 else:
@@ -203,5 +224,6 @@ if __name__ == "__main__":
     parser = Parser(lexer.tokenize())
     compiler = Compiler(parser.parse())
     compiler.compile()
-    print("Running a program...")
-    subprocess.run(["./program"], check=True)
+    print("Compilation Done!")
+    # print("Running a program...")
+    # subprocess.run(["./program"], check=True)

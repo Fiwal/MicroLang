@@ -1,20 +1,28 @@
-# programming language test ((5 + 10) * 12 - 7) * (-1)
-int: num, 10;
-int: num_2;
-
-FN: operation, 4;
-    int: result, parameter_1;
-    add: result, parameter_2;
-    mul: result, parameter_3;
-    sub: result, parameter_4;
-    mul: result, -1;
-    return: result;
-ENDFN;
+string: num_prompt_1, "a: ";
+string: num_prompt_2, "b: ";
+string: add_prompt, "a + b = ";
+string: sub_prompt, "a - b = ";
 
 FN: main, 0;
-    int: a, 5;
-    set: num_2, 12;
-    operation: a, num, num_2, 7;
-    print_int: return_value;
+    int: a;
+    int: b;
+
+    print: num_prompt_1;
+    input_int: a;
+    print: num_prompt_2;
+    input_int: b;
+
+    int: c, a;
+    add: c, b;
+    print: add_prompt;
+    print_int: c;
+    print: new_line;
+
+    set: c, a;
+    sub: c, b;
+    print: sub_prompt;
+    print_int: c;
+    print: new_line;
+
     return: 0;
 ENDFN;
