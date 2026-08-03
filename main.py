@@ -21,10 +21,12 @@ class Lexer:
             elif char == "\n" and self.is_comment:
                 self.is_comment = False
 
-            if char == '"' and not self.in_quotes:
+            if char == "`" or char == "\'" or char == "\"" and not self.in_quotes:
                 self.in_quotes = True
-            elif char == '"' and self.in_quotes:
+                char = "`"
+            elif char == '`' or char == "\'" or char == "\"" and self.in_quotes:
                 self.in_quotes = False
+                char = "`"
 
             if self.in_quotes:
                 self.buffer += char
@@ -81,6 +83,7 @@ class Function:
         self.local_variables = []
         self.parameter_count = 0
         self.tokens = []
+        self.if_list = []
 
 class Parser:
     def __init__(self, tokens):
@@ -90,9 +93,9 @@ class Parser:
 
     def parse(self):
         for token in self.tokens:
-            if token['instruction'] == "FN":
+            if token["instruction"] == "FN":
                 self.start_function(token)
-            elif token['instruction'] == "ENDFN":
+            elif token["instruction"] == "ENDFN":
                 self.end_function()
             elif self.in_function_body:
                 self.append_instruction(token)
@@ -103,53 +106,75 @@ class Parser:
 
     def start_function(self, token):
         self.in_function_body = True
-        self.program["functions"].append(Function(token['arguments'][0]))
-        self.program["functions"][-1].parameter_count = token['arguments'][1]
+        self.program["functions"].append(Function(token["arguments"][0]))
+        self.program["functions"][-1].parameter_count = token["arguments"][1]
 
     def end_function(self):
         self.in_function_body = False
 
     def append_instruction(self, token):
+        if token["instruction"] == "IF":
+            self.program["functions"][-1].if_list.append({"end": False, "id": len(self.program["functions"][-1].if_list)})
+            token["arguments"].append(self.program["functions"][-1].if_list[-1]["id"])
+        elif token["instruction"] == "ELSE":
+            for i in reversed(self.program["functions"][-1].if_list):
+                if not i["end"]:
+                    token["arguments"].append(i["id"])
+                    break
+        elif token["instruction"] == "ENDIF":
+            for i in reversed(self.program["functions"][-1].if_list):
+                if not i["end"]:
+                    i["end"] = True
+                    token["arguments"].append(i["id"])
+                    break
+        elif token["instruction"] == "int":
+            self.program["functions"][-1].local_variables.append(token["arguments"][0])
+            token["arguments"].append(len(self.program["functions"][-1].local_variables))
         self.program["functions"][-1].tokens.append(token)
-        if token['instruction'] == "int":
-            self.program["functions"][-1].local_variables.append(token['arguments'][0])
-            token['arguments'].append(len(self.program["functions"][-1].local_variables))
 
     def append_global_variables(self, token):
-        if token['instruction'] == "int":
-            if len(token['arguments']) == 1:
-                self.program["uninitialized_global_variables"].append({"type": "int", "name": token['arguments'][0]})
-            elif len(token['arguments']) == 2:
-                self.program["initialized_global_variables"].append({"type": "int", "name": token['arguments'][0], "value": token['arguments'][1]})
-        elif token['instruction'] == "string":
-            self.program["initialized_global_variables"].append({"type": "string", "name": token['arguments'][0], "value": token['arguments'][1]})
+        if token["instruction"] == "int":
+            if len(token["arguments"]) == 1:
+                self.program["uninitialized_global_variables"].append({"type": "int", "name": token["arguments"][0]})
+            elif len(token["arguments"]) == 2:
+                self.program["initialized_global_variables"].append({"type": "int", "name": token["arguments"][0], "value": token["arguments"][1]})
+        elif token["instruction"] == "string":
+            self.program["initialized_global_variables"].append({"type": "string", "name": token["arguments"][0], "value": token["arguments"][1]})
 
 class Compiler:
     def __init__(self, program):
         self.program = program
         self.assembly_code = ""
         self.arguments_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
+        self.comparison_jumps = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}
         self.output_file = "output.asm"
 
     def compile(self):
+        self.section_data()
+        self.section_bss()
         self.section_text()
         self.save_assembly()
         self.build_executable()
 
-    def section_text(self):
+    def section_data(self):
         self.add_assembly_code("section .data\n")
-        self.add_assembly_code("fmt_int? db \"%d\", 0\nnew_line db 10, 0\n")
+
+        self.add_assembly_code("fmt_int? db \"%lld\", 0\n")
+
         for var in self.program["initialized_global_variables"]:
-            if var['type'] == 'int':
-                self.add_assembly_code(f"{var['name']}? dq {var['value']}\n%define {var['name']} [{var['name']}?]\n")
-            if var['type'] == 'string':
-                self.add_assembly_code(f"{var['name']} db {var['value']}, 0\n")
+            if var["type"] == "int":
+                self.add_assembly_code(f"{var["name"]}? dq {var["value"]}\n%define {var["name"]} [{var["name"]}?]\n")
+            if var["type"] == "string":
+                self.add_assembly_code(f"{var["name"]} db {var["value"]}, 0\n")
 
+    def section_bss(self):
         self.add_assembly_code("section .bss\n")
-        for var in self.program["uninitialized_global_variables"]:
-            if var['type'] == 'int':
-                self.add_assembly_code(f"{var['name']}? resq 1\n%define {var['name']} [{var['name']}?]\n")
 
+        for var in self.program["uninitialized_global_variables"]:
+            if var["type"] == "int":
+                self.add_assembly_code(f"{var["name"]}? resq 1\n%define {var["name"]} [{var["name"]}?]\n")
+
+    def section_text(self):
         self.add_assembly_code("section .text\nglobal main\nextern printf\nextern scanf\n%define return_value rax\n")
 
         for i in self.program["functions"]:
@@ -166,35 +191,41 @@ class Compiler:
 
             for j in i.tokens:
                 if j["instruction"] == "int":
-                    if len(j['arguments']) == 2:
-                        self.add_assembly_code(f"%define {j['arguments'][0]} [rbp-{(j['arguments'][1] + i.parameter_count) * 8}]\n")
-                    if len(j['arguments']) == 3:
-                        self.add_assembly_code(f"%define {j['arguments'][0]} [rbp-{(j['arguments'][2] + i.parameter_count) * 8}]\n")
-                        self.add_assembly_code(f"mov rax, {j['arguments'][1]}\nmov {j['arguments'][0]}, rax\n")
+                    if len(j["arguments"]) == 2:
+                        self.add_assembly_code(f"%define {j["arguments"][0]} [rbp-{(j["arguments"][1] + i.parameter_count) * 8}]\n")
+                    if len(j["arguments"]) == 3:
+                        self.add_assembly_code(f"%define {j["arguments"][0]} [rbp-{(j["arguments"][2] + i.parameter_count) * 8}]\n")
+                        self.add_assembly_code(f"mov rax, {j["arguments"][1]}\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "set":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][1]}\nmov {j['arguments'][0]}, rax\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][1]}\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "add":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][1]}\nadd {j['arguments'][0]}, rax\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][1]}\nadd {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "sub":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][1]}\nsub {j['arguments'][0]}, rax\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][1]}\nsub {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "mul":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][0]}\nimul rax, {j['arguments'][1]}\nmov {j['arguments'][0]}, rax\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\nimul rax, {j["arguments"][1]}\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "div":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][0]}\ncqo\nmov rbx, {j['arguments'][1]}\nidiv rbx\nmov {j['arguments'][0]}, rax\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\ncqo\nmov rbx, {j["arguments"][1]}\nidiv rbx\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "mod":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][0]}\ncqo\nmov rbx, {j['arguments'][1]}\nidiv rbx\nmov {j['arguments'][0]}, rdx\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\ncqo\nmov rbx, {j["arguments"][1]}\nidiv rbx\nmov {j["arguments"][0]}, rdx\n")
                 elif j["instruction"] == "print_int":
-                    self.add_assembly_code(f"mov rdi, fmt_int?\nmov rsi, {j['arguments'][0]}\nxor rax, rax\ncall printf\n")
+                    self.add_assembly_code(f"mov rdi, fmt_int?\nmov rsi, {j["arguments"][0]}\nxor rax, rax\ncall printf\n")
                 elif j["instruction"] == "input_int":
-                    self.add_assembly_code(f"mov rdi, fmt_int?\nlea rsi, {j['arguments'][0]}\nxor rax, rax\ncall scanf\n")
+                    self.add_assembly_code(f"mov rdi, fmt_int?\nlea rsi, {j["arguments"][0]}\nxor rax, rax\ncall scanf\n")
                 elif j["instruction"] == "print":
-                    self.add_assembly_code(f"mov rdi, {j['arguments'][0]}\nxor rax, rax\ncall printf\n")
+                    self.add_assembly_code(f"mov rdi, {j["arguments"][0]}\nxor rax, rax\ncall printf\n")
                 elif j["instruction"] == "return":
-                    self.add_assembly_code(f"mov rax, {j['arguments'][0]}\njmp .end\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\njmp .end\n")
+                elif j["instruction"] == "IF":
+                    self.add_assembly_code(f"mov rax, {j["arguments"][2]}\ncmp {j["arguments"][0]}, rax\nj{self.comparison_jumps[j["arguments"][1]]} .else_{j["arguments"][3]}\n")
+                elif j["instruction"] == "ELSE":
+                    self.add_assembly_code(f"jmp .endif_{j["arguments"][0]}\n.else_{j["arguments"][0]}:\n")
+                elif j["instruction"] == "ENDIF":
+                    self.add_assembly_code(f".endif_{j["arguments"][0]}:\n")
                 else:
-                    for k in range(len(j['arguments'])):
-                        self.add_assembly_code(f"mov {self.arguments_registers[k]}, {j['arguments'][k]}\n")
-                    self.add_assembly_code(f"call {j['instruction']}\n")
+                    for k in range(len(j["arguments"])):
+                        self.add_assembly_code(f"mov {self.arguments_registers[k]}, {j["arguments"][k]}\n")
+                    self.add_assembly_code(f"call {j["instruction"]}\n")
 
             self.add_assembly_code(".end:\n")
 
