@@ -21,11 +21,8 @@ class Lexer:
             elif char == "\n" and self.is_comment:
                 self.is_comment = False
 
-            if char == "`" or char == "\'" or char == "\"" and not self.in_quotes:
-                self.in_quotes = True
-                char = "`"
-            elif char == '`' or char == "\'" or char == "\"" and self.in_quotes:
-                self.in_quotes = False
+            if char in ('`', "'", '"'):
+                self.in_quotes = not self.in_quotes
                 char = "`"
 
             if self.in_quotes:
