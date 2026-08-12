@@ -183,8 +183,8 @@ class Compiler:
                 self.add_assembly_code(f"sub rsp, {(len(i.local_variables) + i.parameter_count) * 8 + 8}\n")
 
             for j in range(i.parameter_count):
-                self.add_assembly_code(f"%define parameter_{j+1} [rbp-{(j+1)*8}]\n")
-                self.add_assembly_code(f"mov parameter_{j+1}, {self.arguments_registers[j]}\n")
+                self.add_assembly_code(f"%define parameter_{j} [rbp-{(j+1)*8}]\n")
+                self.add_assembly_code(f"mov parameter_{j}, {self.arguments_registers[j]}\n")
 
             for j in i.tokens:
                 if j["instruction"] == "int":
@@ -212,13 +212,17 @@ class Compiler:
                 elif j["instruction"] == "print":
                     self.add_assembly_code(f"mov rdi, {j["arguments"][0]}\nxor rax, rax\ncall printf\n")
                 elif j["instruction"] == "return":
-                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\njmp .end\n")
+                    if len(j["arguments"]) == 1:
+                        self.add_assembly_code(f"mov rax, {j["arguments"][0]}\n")
+                    self.add_assembly_code("jmp .end\n")
                 elif j["instruction"] == "IF":
                     self.add_assembly_code(f"mov rax, {j["arguments"][2]}\ncmp {j["arguments"][0]}, rax\nj{self.comparison_jumps[j["arguments"][1]]} .else_{j["arguments"][3]}\n")
                 elif j["instruction"] == "ELSE":
                     self.add_assembly_code(f"jmp .endif_{j["arguments"][0]}\n.else_{j["arguments"][0]}:\n")
                 elif j["instruction"] == "ENDIF":
                     self.add_assembly_code(f".endif_{j["arguments"][0]}:\n")
+                elif j["instruction"] == "name_parameter":
+                    self.add_assembly_code(f"%define {j["arguments"][0]} parameter_{j["arguments"][1]}\n")
                 else:
                     for k in range(len(j["arguments"])):
                         self.add_assembly_code(f"mov {self.arguments_registers[k]}, {j["arguments"][k]}\n")

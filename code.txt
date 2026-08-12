@@ -2,17 +2,55 @@ string: num_prompt_1, "enter a: ";
 string: num_prompt_2, "enter b: ";
 string: operation_type_prompt, "1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\nenter your choice: ";
 string: result_prompt, "result: ";
-string: invalid_operation_error, "invalid operation type\n";
-string: divide_by_zero_error, "cannot divide by zero\n";
+string: invalid_operation_error_prompt, "invalid operation type\n";
+string: divide_by_zero_error_prompt, "cannot divide by zero\n";
 string: new_line, "\n";
 
-FN: is_zero, 1;
-    int: num;
-    IF: num, ==, 0;
-        return: 1;
-    ELSE;
-        return: 0;
-    ENDIF;
+int: division_by_zero_error, 0;
+int: invalid_operation_error, 0;
+
+FN: calculate, 3;
+    name_parameter: a, 0;
+    name_parameter: b, 1;
+    name_parameter: operation_type, 2;
+
+    IF: operation_type, ==, 1;
+        add: a, b;
+        return: a;
+    ELSE; ENDIF;
+
+    IF: operation_type, ==, 2;
+        sub: a, b;
+        return: a;
+    ELSE; ENDIF;
+
+    IF: operation_type, ==, 3;
+        mul: a, b;
+        return: a;
+    ELSE; ENDIF;
+
+    IF: operation_type, ==, 4;
+        IF: b, !=, 0;
+            div: a, b;
+            return: a;
+        ELSE;
+            set: division_by_zero_error, 1;
+            return: 0;
+        ENDIF;
+    ELSE; ENDIF;
+
+    IF: operation_type, ==, 5;
+        IF: b, !=, 0;
+            mod: a, b;
+            return: a;
+        ELSE;
+            set: division_by_zero_error, 1;
+            return: 0;
+        ENDIF;
+    ELSE; ENDIF;
+
+    set: invalid_operation_error, 1;
+    return: 0;
 ENDFN;
 
 FN: main, 0;
@@ -29,49 +67,19 @@ FN: main, 0;
     print: operation_type_prompt;
     input_int: operation_type;
 
-    IF: operation_type, ==, 1;
-        set: result, a;
-        add: result, b;
+    calculate: a, b, operation_type;
+    set: result, return_value;
+
+    IF: division_by_zero_error, ==, 1;
+        print: divide_by_zero_error_prompt;
     ELSE;
-        IF: operation_type, ==, 2;
-            set: result, a;
-            sub: result, b;
+        IF: invalid_operation_error, ==, 1;
+            print: invalid_operation_error_prompt;
         ELSE;
-            IF: operation_type, ==, 3;
-                set: result, a;
-                mul: result, b;
-            ELSE;
-                IF: operation_type, ==, 4;
-                    is_zero: b;
-                    IF: return_value, ==, 1;
-                        print: divide_by_zero_error;
-                        return: 0;
-                    ELSE;
-                    ENDIF;
-                    set: result, a;
-                    div: result, b;
-                ELSE;
-                    IF: operation_type, ==, 5;
-                        IF: return_value, ==, 1;
-                            print: divide_by_zero_error;
-                            return: 0;
-                        ELSE;
-                        ENDIF;
-                        set: result, a;
-                        mod: result, b;
-                    ELSE;
-                        print: invalid_operation_error;
-                        print: new_line;
-                        return: 0;
-                    ENDIF;
-                ENDIF;
-            ENDIF;
+            print: result_prompt;
+            print: result;
         ENDIF;
     ENDIF;
-
-    print: result_prompt;
-    print_int: result;
-    print: new_line;
 
     return: 0;
 ENDFN;
