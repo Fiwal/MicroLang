@@ -16,12 +16,12 @@ class Lexer:
 
     def tokenize(self):
         for char in self.source:
-            if char == "#" and not self.is_comment:
+            if char == "#" and not self.is_comment and not self.in_quotes:
                 self.is_comment = True
             elif char == "\n" and self.is_comment:
                 self.is_comment = False
 
-            if char in ('`', "'", '"'):
+            if char in ('`', "'", '"') and not self.is_comment:
                 self.in_quotes = not self.in_quotes
                 char = "`"
 
@@ -79,8 +79,10 @@ class Function:
         self.name = name
         self.local_variables = []
         self.parameter_count = 0
+        self.parameter_names = []
         self.tokens = []
         self.if_list = []
+        self.loop_list = []
 
 class Parser:
     def __init__(self, tokens):
@@ -113,20 +115,44 @@ class Parser:
         if token["instruction"] == "IF":
             self.program["functions"][-1].if_list.append({"end": False, "id": len(self.program["functions"][-1].if_list)})
             token["arguments"].append(self.program["functions"][-1].if_list[-1]["id"])
+
         elif token["instruction"] == "ELSE":
             for i in reversed(self.program["functions"][-1].if_list):
                 if not i["end"]:
                     token["arguments"].append(i["id"])
                     break
+
         elif token["instruction"] == "ENDIF":
             for i in reversed(self.program["functions"][-1].if_list):
                 if not i["end"]:
                     i["end"] = True
                     token["arguments"].append(i["id"])
                     break
+
+        elif token["instruction"] == "LOOP":
+            self.program["functions"][-1].loop_list.append({"end": False, "id": len(self.program["functions"][-1].loop_list)})
+            token["arguments"].append(self.program["functions"][-1].loop_list[-1]["id"])
+
+        elif token["instruction"] == "BREAK":
+            for i in reversed(self.program["functions"][-1].loop_list):
+                if not i["end"]:
+                    token["arguments"].append(i["id"])
+                    break
+
+        elif token["instruction"] == "ENDLOOP":
+            for i in reversed(self.program["functions"][-1].loop_list):
+                if not i["end"]:
+                    i["end"] = True
+                    token["arguments"].append(i["id"])
+                    break
+
         elif token["instruction"] == "int":
             self.program["functions"][-1].local_variables.append(token["arguments"][0])
             token["arguments"].append(len(self.program["functions"][-1].local_variables))
+
+        elif token["instruction"] == "name_parameter":
+            self.program["functions"][-1].parameter_names.append(token["arguments"][0])
+
         self.program["functions"][-1].tokens.append(token)
 
     def append_global_variables(self, token):
@@ -135,6 +161,7 @@ class Parser:
                 self.program["uninitialized_global_variables"].append({"type": "int", "name": token["arguments"][0]})
             elif len(token["arguments"]) == 2:
                 self.program["initialized_global_variables"].append({"type": "int", "name": token["arguments"][0], "value": token["arguments"][1]})
+
         elif token["instruction"] == "string":
             self.program["initialized_global_variables"].append({"type": "string", "name": token["arguments"][0], "value": token["arguments"][1]})
 
@@ -193,6 +220,7 @@ class Compiler:
                     if len(j["arguments"]) == 3:
                         self.add_assembly_code(f"%define {j["arguments"][0]} [rbp-{(j["arguments"][2] + i.parameter_count) * 8}]\n")
                         self.add_assembly_code(f"mov rax, {j["arguments"][1]}\nmov {j["arguments"][0]}, rax\n")
+
                 elif j["instruction"] == "set":
                     self.add_assembly_code(f"mov rax, {j["arguments"][1]}\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "add":
@@ -202,9 +230,9 @@ class Compiler:
                 elif j["instruction"] == "mul":
                     self.add_assembly_code(f"mov rax, {j["arguments"][0]}\nimul rax, {j["arguments"][1]}\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "div":
-                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\ncqo\nmov rbx, {j["arguments"][1]}\nidiv rbx\nmov {j["arguments"][0]}, rax\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\ncqo\nmov r11, {j["arguments"][1]}\nidiv r11\nmov {j["arguments"][0]}, rax\n")
                 elif j["instruction"] == "mod":
-                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\ncqo\nmov rbx, {j["arguments"][1]}\nidiv rbx\nmov {j["arguments"][0]}, rdx\n")
+                    self.add_assembly_code(f"mov rax, {j["arguments"][0]}\ncqo\nmov r11, {j["arguments"][1]}\nidiv r11\nmov {j["arguments"][0]}, rdx\n")
                 elif j["instruction"] == "print_int":
                     self.add_assembly_code(f"mov rdi, fmt_int?\nmov rsi, {j["arguments"][0]}\nxor rax, rax\ncall printf\n")
                 elif j["instruction"] == "input_int":
@@ -221,6 +249,12 @@ class Compiler:
                     self.add_assembly_code(f"jmp .endif_{j["arguments"][0]}\n.else_{j["arguments"][0]}:\n")
                 elif j["instruction"] == "ENDIF":
                     self.add_assembly_code(f".endif_{j["arguments"][0]}:\n")
+                elif j["instruction"] == "LOOP":
+                    self.add_assembly_code(f".loop_{j["arguments"][0]}:\n")
+                elif j["instruction"] == "BREAK":
+                    self.add_assembly_code(f"jmp .endloop_{j["arguments"][0]}\n")
+                elif j["instruction"] == "ENDLOOP":
+                    self.add_assembly_code(f"jmp .loop_{j["arguments"][0]}\n.endloop_{j["arguments"][0]}:\n")
                 elif j["instruction"] == "name_parameter":
                     self.add_assembly_code(f"%define {j["arguments"][0]} parameter_{j["arguments"][1]}\n")
                 else:
@@ -231,9 +265,12 @@ class Compiler:
             self.add_assembly_code(".end:\n")
 
             for j in range(i.parameter_count):
-                self.add_assembly_code(f"%undef parameter_{j+1}\n")
+                self.add_assembly_code(f"%undef parameter_{j}\n")
 
             for j in i.local_variables:
+                self.add_assembly_code(f"%undef {j}\n")
+
+            for j in i.parameter_names:
                 self.add_assembly_code(f"%undef {j}\n")
 
             self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
