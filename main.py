@@ -84,6 +84,7 @@ class Function:
         self.if_list = []
         self.loop_list = []
 
+
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -165,6 +166,7 @@ class Parser:
 
         elif token["instruction"] == "string":
             self.program["initialized_global_variables"].append({"type": "string", "name": token["arguments"][0], "value": token["arguments"][1]})
+
 
 class Compiler:
     def __init__(self, program):
