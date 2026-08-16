@@ -278,17 +278,17 @@ class Compiler:
 
             case "div":
                 self.add_assembly_code(
+                    f"mov r11, {token["arguments"][1]}\n"
                     f"mov rax, {token["arguments"][0]}\n"
                     "cqo\n"
-                    f"mov r11, {token["arguments"][1]}\n"
                     "idiv r11\n"
                     f"mov {token["arguments"][0]}, rax\n")
 
             case "mod":
                 self.add_assembly_code(
+                    f"mov r11, {token["arguments"][1]}\n"
                     f"mov rax, {token["arguments"][0]}\n"
                     "cqo\n"
-                    f"mov r11, {token["arguments"][1]}\n"
                     "idiv r11\n"
                     f"mov {token["arguments"][0]}, rdx\n")
 

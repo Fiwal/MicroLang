@@ -2,13 +2,14 @@ section .data
 fmt_int? db "%lld", 0
 num_prompt_1 db `enter a: `, 0
 num_prompt_2 db `enter b: `, 0
-operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\nenter your choice: `, 0
+operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\nenter your choice: `, 0
 result_prompt db `result: `, 0
 exit_prompt db `do you want to exit? (1-NO/2-yes): `, 0
 invalid_operation_error_prompt db `invalid operation type\n`, 0
 divide_by_zero_error_prompt db `cannot divide by zero\n`, 0
 power_error_prompt db `program cannot raise to a negative power\n`, 0
 invalid_choice_prompt db `invalid choice\n`, 0
+gcd_error_prompt db `GCD(0, 0) is undefined\n`, 0
 new_line db `\n`, 0
 section .bss
 section .text
@@ -75,6 +76,166 @@ jmp .end
 %undef parameter_1
 %undef counter
 %undef result
+%undef a
+%undef b
+mov rsp, rbp
+pop rbp
+ret
+absolute_value:
+push rbp
+mov rbp, rsp
+sub rsp, 16
+%define parameter_0 [rbp-8]
+mov parameter_0, rdi
+%define a parameter_0
+mov rax, 0
+cmp a, rax
+jge .else_0
+mov rax, a
+imul rax, -1
+mov a, rax
+mov rax, a
+jmp .end
+jmp .endif_0
+.else_0:
+.endif_0:
+mov rax, a
+jmp .end
+.end:
+%undef parameter_0
+%undef a
+mov rsp, rbp
+pop rbp
+ret
+euclidean_algorithm:
+push rbp
+mov rbp, rsp
+sub rsp, 16
+%define parameter_0 [rbp-8]
+mov parameter_0, rdi
+%define parameter_1 [rbp-16]
+mov parameter_1, rsi
+%define a parameter_0
+%define b parameter_1
+mov rax, 0
+cmp b, rax
+je .else_0
+mov r11, b
+mov rax, a
+cqo
+idiv r11
+mov a, rdx
+mov rdi, b
+mov rsi, a
+call euclidean_algorithm
+mov rax, return_value
+jmp .end
+jmp .endif_0
+.else_0:
+.endif_0:
+mov rax, a
+jmp .end
+.end:
+%undef parameter_0
+%undef parameter_1
+%undef a
+%undef b
+mov rsp, rbp
+pop rbp
+ret
+GCD:
+push rbp
+mov rbp, rsp
+sub rsp, 16
+%define parameter_0 [rbp-8]
+mov parameter_0, rdi
+%define parameter_1 [rbp-16]
+mov parameter_1, rsi
+%define a parameter_0
+%define b parameter_1
+mov rdi, a
+call absolute_value
+mov rax, return_value
+mov a, rax
+mov rdi, b
+call absolute_value
+mov rax, return_value
+mov b, rax
+mov rax, 0
+cmp a, rax
+jne .else_0
+mov rax, b
+jmp .end
+jmp .endif_0
+.else_0:
+.endif_0:
+mov rax, 0
+cmp b, rax
+jne .else_1
+mov rax, a
+jmp .end
+jmp .endif_1
+.else_1:
+.endif_1:
+mov rdi, a
+mov rsi, b
+call euclidean_algorithm
+mov rax, return_value
+jmp .end
+.end:
+%undef parameter_0
+%undef parameter_1
+%undef a
+%undef b
+mov rsp, rbp
+pop rbp
+ret
+LCM:
+push rbp
+mov rbp, rsp
+sub rsp, 32
+%define parameter_0 [rbp-8]
+mov parameter_0, rdi
+%define parameter_1 [rbp-16]
+mov parameter_1, rsi
+%define a parameter_0
+%define b parameter_1
+mov rdi, a
+call absolute_value
+mov rax, return_value
+mov a, rax
+mov rdi, b
+call absolute_value
+mov rax, return_value
+mov b, rax
+%define c [rbp-24]
+mov rax, a
+mov c, rax
+mov rax, c
+imul rax, b
+mov c, rax
+mov rax, 0
+cmp c, rax
+jne .else_0
+mov rax, 0
+jmp .end
+jmp .endif_0
+.else_0:
+.endif_0:
+mov rdi, a
+mov rsi, b
+call euclidean_algorithm
+mov r11, return_value
+mov rax, c
+cqo
+idiv r11
+mov c, rax
+mov rax, c
+jmp .end
+.end:
+%undef parameter_0
+%undef parameter_1
+%undef c
 %undef a
 %undef b
 mov rsp, rbp
@@ -148,9 +309,9 @@ jne .else_3
 mov rax, 0
 cmp b, rax
 je .else_4
+mov r11, b
 mov rax, a
 cqo
-mov r11, b
 idiv r11
 mov a, rax
 mov rdi, a
@@ -172,9 +333,9 @@ jne .else_5
 mov rax, 0
 cmp b, rax
 je .else_6
+mov r11, b
 mov rax, a
 cqo
-mov r11, b
 idiv r11
 mov a, rdx
 mov rdi, a
@@ -214,6 +375,50 @@ jmp .end
 jmp .endif_7
 .else_7:
 .endif_7:
+mov rax, 7
+cmp operation_type, rax
+jne .else_9
+mov rax, 0
+cmp a, rax
+jne .else_10
+mov rax, 0
+cmp b, rax
+jne .else_11
+mov rdi, gcd_error_prompt
+xor rax, rax
+call printf
+jmp .end
+jmp .endif_11
+.else_11:
+.endif_11:
+jmp .endif_10
+.else_10:
+.endif_10:
+mov rdi, a
+mov rsi, b
+call GCD
+mov rax, return_value
+mov a, rax
+mov rdi, a
+call print_result
+jmp .end
+jmp .endif_9
+.else_9:
+.endif_9:
+mov rax, 8
+cmp operation_type, rax
+jne .else_12
+mov rdi, a
+mov rsi, b
+call LCM
+mov rax, return_value
+mov a, rax
+mov rdi, a
+call print_result
+jmp .end
+jmp .endif_12
+.else_12:
+.endif_12:
 mov rdi, invalid_operation_error_prompt
 xor rax, rax
 call printf

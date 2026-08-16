@@ -1,12 +1,13 @@
 string: num_prompt_1, "enter a: ";
 string: num_prompt_2, "enter b: ";
-string: operation_type_prompt, "1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\nenter your choice: ";
+string: operation_type_prompt, "1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\nenter your choice: ";
 string: result_prompt, "result: ";
 string: exit_prompt, "do you want to exit? (1-NO/2-yes): ";
 string: invalid_operation_error_prompt, "invalid operation type\n";
 string: divide_by_zero_error_prompt, "cannot divide by zero\n";
 string: power_error_prompt, "program cannot raise to a negative power\n";
 string: invalid_choice_prompt, "invalid choice\n";
+string: gcd_error_prompt, "GCD(0, 0) is undefined\n";
 string: new_line, "\n";
 
 FN: print_result, 1;
@@ -30,6 +31,73 @@ FN: power, 2;
     ENDLOOP;
 
     return: result;
+ENDFN;
+
+FN: absolute_value, 1;
+    name_parameter: a, 0;
+
+    IF: a, <, 0;
+        mul: a, -1;
+        return: a;
+    ELSE; ENDIF;
+
+    return: a;
+ENDFN;
+
+FN: euclidean_algorithm, 2;
+    name_parameter: a, 0;
+    name_parameter: b, 1;
+
+    IF: b, !=, 0;
+        mod: a, b;
+        euclidean_algorithm: b, a;
+        return: return_value;
+    ELSE; ENDIF;
+
+    return: a;
+ENDFN;
+
+FN: GCD, 2;
+    name_parameter: a, 0;
+    name_parameter: b, 1;
+
+    absolute_value: a;
+    set: a, return_value;
+
+    absolute_value: b;
+    set: b, return_value;
+
+    IF: a, ==, 0;
+        return: b;
+    ELSE; ENDIF;
+
+    IF: b, ==, 0;
+        return: a;
+    ELSE; ENDIF;
+
+    euclidean_algorithm: a, b;
+    return: return_value;
+ENDFN;
+
+FN: LCM, 2;
+    name_parameter: a, 0;
+    name_parameter: b, 1;
+
+    absolute_value: a;
+    set: a, return_value;
+
+    absolute_value: b;
+    set: b, return_value;
+
+    int: c, a;
+    mul: c, b;
+    IF: c, ==, 0;
+        return: 0;
+    ELSE; ENDIF;
+
+    euclidean_algorithm: a, b;
+    div: c, return_value;
+    return: c;
 ENDFN;
 
 FN: calculator, 0;
@@ -95,6 +163,27 @@ FN: calculator, 0;
             print: power_error_prompt;
             return;
         ENDIF;
+    ELSE; ENDIF;
+
+    IF: operation_type, ==, 7;
+        IF: a, ==, 0;
+            IF: b, ==, 0;
+                print: gcd_error_prompt;
+                return;
+            ELSE; ENDIF;
+        ELSE; ENDIF;
+
+        GCD: a, b;
+        set: a, return_value;
+        print_result: a;
+        return;
+    ELSE; ENDIF;
+
+    IF: operation_type, ==, 8;
+        LCM: a, b;
+        set: a, return_value;
+        print_result: a;
+        return;
     ELSE; ENDIF;
 
     print: invalid_operation_error_prompt;
