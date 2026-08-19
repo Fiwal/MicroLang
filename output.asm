@@ -2,7 +2,7 @@ section .data
 fmt_int? db "%lld", 0
 num_prompt_1 db `enter a: `, 0
 num_prompt_2 db `enter b: `, 0
-operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\nenter your choice: `, 0
+operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the least common multiple (LCM)\nenter your choice: `, 0
 result_prompt db `result: `, 0
 exit_prompt db `do you want to exit? (1-NO/2-yes): `, 0
 invalid_operation_error_prompt db `invalid operation type\n`, 0
@@ -59,9 +59,7 @@ mov rax, b
 cmp counter, rax
 jne .else_0
 jmp .endloop_0
-jmp .endif_0
 .else_0:
-.endif_0:
 mov rax, result
 imul rax, a
 mov result, rax
@@ -96,9 +94,7 @@ imul rax, -1
 mov a, rax
 mov rax, a
 jmp .end
-jmp .endif_0
 .else_0:
-.endif_0:
 mov rax, a
 jmp .end
 .end:
@@ -107,7 +103,7 @@ jmp .end
 mov rsp, rbp
 pop rbp
 ret
-euclidean_algorithm:
+Euclidean_algorithm:
 push rbp
 mov rbp, rsp
 sub rsp, 16
@@ -127,12 +123,10 @@ idiv r11
 mov a, rdx
 mov rdi, b
 mov rsi, a
-call euclidean_algorithm
+call Euclidean_algorithm
 mov rax, return_value
 jmp .end
-jmp .endif_0
 .else_0:
-.endif_0:
 mov rax, a
 jmp .end
 .end:
@@ -166,20 +160,16 @@ cmp a, rax
 jne .else_0
 mov rax, b
 jmp .end
-jmp .endif_0
 .else_0:
-.endif_0:
 mov rax, 0
 cmp b, rax
 jne .else_1
 mov rax, a
 jmp .end
-jmp .endif_1
 .else_1:
-.endif_1:
 mov rdi, a
 mov rsi, b
-call euclidean_algorithm
+call Euclidean_algorithm
 mov rax, return_value
 jmp .end
 .end:
@@ -219,12 +209,10 @@ cmp c, rax
 jne .else_0
 mov rax, 0
 jmp .end
-jmp .endif_0
 .else_0:
-.endif_0:
 mov rdi, a
 mov rsi, b
-call euclidean_algorithm
+call Euclidean_algorithm
 mov r11, return_value
 mov rax, c
 cqo
@@ -277,9 +265,7 @@ add a, rax
 mov rdi, a
 call print_result
 jmp .end
-jmp .endif_0
 .else_0:
-.endif_0:
 mov rax, 2
 cmp operation_type, rax
 jne .else_1
@@ -288,9 +274,7 @@ sub a, rax
 mov rdi, a
 call print_result
 jmp .end
-jmp .endif_1
 .else_1:
-.endif_1:
 mov rax, 3
 cmp operation_type, rax
 jne .else_2
@@ -300,9 +284,7 @@ mov a, rax
 mov rdi, a
 call print_result
 jmp .end
-jmp .endif_2
 .else_2:
-.endif_2:
 mov rax, 4
 cmp operation_type, rax
 jne .else_3
@@ -324,9 +306,7 @@ xor rax, rax
 call printf
 jmp .end
 .endif_4:
-jmp .endif_3
 .else_3:
-.endif_3:
 mov rax, 5
 cmp operation_type, rax
 jne .else_5
@@ -348,9 +328,7 @@ xor rax, rax
 call printf
 jmp .end
 .endif_6:
-jmp .endif_5
 .else_5:
-.endif_5:
 mov rax, 6
 cmp operation_type, rax
 jne .else_7
@@ -372,9 +350,7 @@ xor rax, rax
 call printf
 jmp .end
 .endif_8:
-jmp .endif_7
 .else_7:
-.endif_7:
 mov rax, 7
 cmp operation_type, rax
 jne .else_9
@@ -388,12 +364,8 @@ mov rdi, gcd_error_prompt
 xor rax, rax
 call printf
 jmp .end
-jmp .endif_11
 .else_11:
-.endif_11:
-jmp .endif_10
 .else_10:
-.endif_10:
 mov rdi, a
 mov rsi, b
 call GCD
@@ -402,9 +374,7 @@ mov a, rax
 mov rdi, a
 call print_result
 jmp .end
-jmp .endif_9
 .else_9:
-.endif_9:
 mov rax, 8
 cmp operation_type, rax
 jne .else_12
@@ -416,9 +386,7 @@ mov a, rax
 mov rdi, a
 call print_result
 jmp .end
-jmp .endif_12
 .else_12:
-.endif_12:
 mov rdi, invalid_operation_error_prompt
 xor rax, rax
 call printf
@@ -442,9 +410,7 @@ mov rax, 0
 cmp run, rax
 jne .else_0
 jmp .endloop_0
-jmp .endif_0
 .else_0:
-.endif_0:
 call calculator
 .loop_1:
 mov rdi, exit_prompt

@@ -5,33 +5,35 @@ class Lexer:
     def __init__(self, source_path):
         self.source_path = source_path
         self.source = open(source_path).read()
-        self.buffer = ""
+        self.token_buffer = ""
         self.tokens = []
-        self.current_instruction = ""
-        self.has_instruction = False
-        self.current_arguments = []
-        self.is_comment = False
-        self.current_line = 1
-        self.in_quotes = False
+        self.current_instruction_name = ""
+        self.instruction_found = False
+        self.instruction_start_detected = False
+        self.current_arguments_list = []
+        self.in_comment = False
+        self.line_number = 1
+        self.instruction_start_line_number = 1
+        self.in_quote = False
 
     def tokenize(self):
         for char in self.source:
-            if char == "#" and not self.is_comment and not self.in_quotes:
-                self.is_comment = True
-            elif char == "\n" and self.is_comment:
-                self.is_comment = False
+            if char == "#" and not self.in_comment and not self.in_quote:
+                self.in_comment = True
+            elif char == "\n" and self.in_comment:
+                self.in_comment = False
 
-            if char in ('`', "'", '"') and not self.is_comment:
-                self.in_quotes = not self.in_quotes
+            if char == "\"" and not self.in_comment:
+                self.in_quote = not self.in_quote
                 char = "`"
 
-            if self.in_quotes:
-                self.buffer += char
+            if self.in_quote:
+                self.token_buffer += char
 
             if char == "\n":
-                self.current_line += 1
+                self.line_number += 1
 
-            if not char.isspace() and not self.is_comment and not self.in_quotes:
+            if not char.isspace() and not self.in_comment and not self.in_quote:
                 match char:
                     case ":":
                         self.capture_instruction_name()
@@ -40,49 +42,104 @@ class Lexer:
                     case ";":
                         self.finalize_instruction()
                     case _:
-                        self.buffer += char
+                        if not self.instruction_start_detected:
+                            self.instruction_start_line_number = self.line_number
+                            self.instruction_start_detected = True
+                        self.token_buffer += char
         return self.tokens
 
     def capture_instruction_name(self):
-        self.has_instruction = True
-        self.current_instruction = self.buffer
+        if self.instruction_found:
+            raise SyntaxError(f"Duplicate ':' in instruction at line {self.line_number}")
+
+        self.instruction_found = True
+        self.current_instruction_name = self.token_buffer
         self.clear_buffer()
 
     def capture_argument(self):
+        if not self.instruction_found:
+            raise SyntaxError(f"Argument found before instruction at line {self.line_number}")
+
         try:
-            self.current_arguments.append(int(self.buffer))
+            self.current_arguments_list.append(int(self.token_buffer))
         except ValueError:
             try:
-                self.current_arguments.append(float(self.buffer))
+                self.current_arguments_list.append(float(self.token_buffer))
             except ValueError:
-                self.current_arguments.append(self.buffer)
+                self.current_arguments_list.append(self.token_buffer)
         self.clear_buffer()
 
     def finalize_instruction(self):
 
-        if not self.has_instruction:
+        if not self.instruction_found:
             self.capture_instruction_name()
         else:
             self.capture_argument()
 
-        self.tokens.append({"instruction": self.current_instruction, "arguments": self.current_arguments})
-        self.current_instruction = ""
-        self.current_arguments = []
-        self.has_instruction = False
+        self.instruction_start_detected = False
+
+        self.tokens.append({"instruction": self.current_instruction_name, "arguments": self.current_arguments_list,
+                            "line_number": self.instruction_start_line_number})
+        self.current_instruction_name = ""
+        self.current_arguments_list = []
+        self.instruction_found = False
 
     def clear_buffer(self):
-        self.buffer = ""
+        self.token_buffer = ""
+
+
+class Stack:
+    def __init__(self):
+        self.stack = []
+
+    def push(self, item):
+        self.stack.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.stack.pop()
+        else:
+            raise IndexError("pop from empty stack")
+
+    def top(self):
+        if not self.is_empty():
+            return self.stack[-1]
+        else:
+            raise IndexError("top from empty stack")
+
+    def is_empty(self):
+        return len(self.stack) == 0
+
+    def size(self):
+        return len(self.stack)
+
+
+def is_valid_name(name):
+    keywords = ["FN", "ENDFN", "return", "name_parameter", "IF", "ELSE", "ENDIF", "LOOP", "ENDLOOP",
+                "break", "int", "string", "print", "print_int", "input_int", "add", "sub", "mul",
+                "div", "mod", "set", "return_value"]
+
+    if name in keywords:
+        return False
+
+    if not name.isidentifier():
+        return False
+
+    return True
 
 
 class Function:
-    def __init__(self, name):
+    def __init__(self, name, parameters_num):
         self.name = name
-        self.local_variables = []
-        self.parameter_count = 0
-        self.parameter_names = []
+        self.parameter_count = parameters_num
+        self.local_variables_names = []
+        self.parameters_names = []
         self.tokens = []
-        self.if_list = []
-        self.loop_list = []
+        self.if_counter = 0
+        self.if_stack = Stack()
+        self.loop_counter = 0
+        self.loop_stack = Stack()
+        self.if_and_loop_stack = Stack()
 
 
 class Parser:
@@ -96,76 +153,131 @@ class Parser:
             if token["instruction"] == "FN":
                 self.start_function(token)
             elif token["instruction"] == "ENDFN":
-                self.end_function()
+                self.end_function(token)
             elif self.in_function_body:
                 self.append_instruction(token)
             else:
                 self.append_global_variables(token)
 
+        if self.in_function_body:
+            raise SyntaxError(f"Unclosed function '{self.get_current_function().name}'")
+
         return self.program
 
     def start_function(self, token):
-        self.in_function_body = True
-        self.program["functions"].append(Function(token["arguments"][0]))
-        self.program["functions"][-1].parameter_count = token["arguments"][1]
+        if self.in_function_body:
+            raise SyntaxError(f"Function cannot be inside another function at line {token['line_number']}")
 
-    def end_function(self):
+        if len(token["arguments"]) != 2:
+            raise SyntaxError(f"Wrong number of arguments for FN at line {token['line_number']}: expected 2, got {len(token["arguments"])}")
+
+        if not is_valid_name(token["arguments"][0]):
+            raise SyntaxError(f"Wrong function name '{token["arguments"][0]}' at line {token['line_number']}")
+
+        if not isinstance(token["arguments"][1], int):
+            raise SyntaxError(f"Parameter count must be an integer number at line {token['line_number']}")
+
+        if token["arguments"][1] < 0 or token["arguments"][1] > 6:
+            raise SyntaxError(f"Parameter count must be between 0 and 6 (inclusive) at line {token['line_number']}")
+
+        self.program["functions"].append(Function(token["arguments"][0], token["arguments"][1]))
+        self.in_function_body = True
+
+    def end_function(self, token):
+        if not self.in_function_body:
+            raise SyntaxError(f"ENDFN without matching FN at line {token['line_number']}")
+
+        if len(token["arguments"]) != 0:
+            raise SyntaxError(f"Wrong number of arguments for ENDFN at line {token['line_number']}: expected 0, got {len(token["arguments"])}")
+
+        function = self.get_current_function()
+
+        if function.if_stack.size() > 0:
+            raise SyntaxError(f"Unclosed IF in function '{self.program['functions'][-1].name}'")
+
+        if function.loop_stack.size() > 0:
+            raise SyntaxError(f"Unclosed LOOP in function '{self.program['functions'][-1].name}'")
+
         self.in_function_body = False
 
     def append_instruction(self, token):
+        function = self.get_current_function()
+
         match token["instruction"]:
             case "IF":
-                self.program["functions"][-1].if_list.append({"end": False, "id": len(self.program["functions"][-1].if_list)})
-                token["arguments"].append(self.program["functions"][-1].if_list[-1]["id"])
+                function.if_stack.push({"else": False, "id": function.if_counter})
+                token["arguments"].append(function.if_counter)
+
+                function.if_counter += 1
+                function.if_and_loop_stack.push("if")
 
             case "ELSE":
-                for i in reversed(self.program["functions"][-1].if_list):
-                    if not i["end"]:
-                        token["arguments"].append(i["id"])
-                        break
+                if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "loop":
+                    raise SyntaxError(f"ELSE without matching IF at line {token['line_number']}")
+
+                current_if = function.if_stack.pop()
+                if current_if["else"]:
+                    raise SyntaxError(f"Duplicate ELSE for the same IF at line {token['line_number']}")
+                current_if["else"] = True
+                token["arguments"].append(current_if["id"])
+
+                function.if_stack.push(current_if)
 
             case "ENDIF":
-                for i in reversed(self.program["functions"][-1].if_list):
-                    if not i["end"]:
-                        i["end"] = True
-                        token["arguments"].append(i["id"])
-                        break
+                if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "loop":
+                    raise SyntaxError(f"ENDIF without matching IF at line {token['line_number']}")
+
+                current_if = function.if_stack.pop()
+                token["arguments"].append(current_if["id"])
+                if not current_if["else"]:
+                    token["arguments"].append("no else")
+
+                function.if_and_loop_stack.pop()
 
             case "LOOP":
-                self.program["functions"][-1].loop_list.append({"end": False, "id": len(self.program["functions"][-1].loop_list)})
-                token["arguments"].append(self.program["functions"][-1].loop_list[-1]["id"])
+                function.loop_stack.push({"id": function.loop_counter})
+                token["arguments"].append(function.loop_counter)
 
-            case "BREAK":
-                for i in reversed(self.program["functions"][-1].loop_list):
-                    if not i["end"]:
-                        token["arguments"].append(i["id"])
-                        break
+                function.loop_counter += 1
+                function.if_and_loop_stack.push("loop")
+
+            case "break":
+                if function.loop_stack.is_empty():
+                    raise SyntaxError(f"break outside of LOOP at line {token['line_number']}")
+
+                current_loop = function.loop_stack.top()
+                token["arguments"].append(current_loop["id"])
 
             case "ENDLOOP":
-                for i in reversed(self.program["functions"][-1].loop_list):
-                    if not i["end"]:
-                        i["end"] = True
-                        token["arguments"].append(i["id"])
-                        break
+                if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "if":
+                    raise SyntaxError(f"ENDLOOP without matching LOOP at line {token['line_number']}")
+
+                current_loop = function.loop_stack.pop()
+                token["arguments"].append(current_loop["id"])
+                function.if_and_loop_stack.pop()
 
             case "int":
-                self.program["functions"][-1].local_variables.append(token["arguments"][0])
-                token["arguments"].append(len(self.program["functions"][-1].local_variables))
+                function.local_variables_names.append(token["arguments"][0])
+                token["arguments"].append(len(function.local_variables_names))
 
             case "name_parameter":
-                self.program["functions"][-1].parameter_names.append(token["arguments"][0])
+                function.parameters_names.append(token["arguments"][0])
 
-        self.program["functions"][-1].tokens.append(token)
+        function.tokens.append(token)
 
     def append_global_variables(self, token):
         if token["instruction"] == "int":
             if len(token["arguments"]) == 1:
                 self.program["uninitialized_global_variables"].append({"type": "int", "name": token["arguments"][0]})
+
             elif len(token["arguments"]) == 2:
                 self.program["initialized_global_variables"].append({"type": "int", "name": token["arguments"][0], "value": token["arguments"][1]})
 
         elif token["instruction"] == "string":
             self.program["initialized_global_variables"].append({"type": "string", "name": token["arguments"][0], "value": token["arguments"][1]})
+
+    def get_current_function(self):
+        return self.program["functions"][-1]
 
 
 class Compiler:
@@ -219,10 +331,10 @@ class Compiler:
                 "push rbp\n"
                 "mov rbp, rsp\n")
 
-            if ((len(function.local_variables) + function.parameter_count) * 8) % 16 == 0:
-                self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8}\n")
+            if ((len(function.local_variables_names) + function.parameter_count) * 8) % 16 == 0:
+                self.add_assembly_code(f"sub rsp, {(len(function.local_variables_names) + function.parameter_count) * 8}\n")
             else:
-                self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8 + 8}\n")
+                self.add_assembly_code(f"sub rsp, {(len(function.local_variables_names) + function.parameter_count) * 8 + 8}\n")
 
             for i in range(function.parameter_count):
                 self.add_assembly_code(f"%define parameter_{i} [rbp-{(i+1)*8}]\n")
@@ -236,10 +348,10 @@ class Compiler:
             for i in range(function.parameter_count):
                 self.add_assembly_code(f"%undef parameter_{i}\n")
 
-            for local_var in function.local_variables:
+            for local_var in function.local_variables_names:
                 self.add_assembly_code(f"%undef {local_var}\n")
 
-            for parameter_name in function.parameter_names:
+            for parameter_name in function.parameters_names:
                 self.add_assembly_code(f"%undef {parameter_name}\n")
 
             self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
@@ -329,12 +441,15 @@ class Compiler:
                     f".else_{token["arguments"][0]}:\n")
 
             case "ENDIF":
-                self.add_assembly_code(f".endif_{token["arguments"][0]}:\n")
+                if len(token["arguments"]) == 2 and token["arguments"][1] == "no else":
+                    self.add_assembly_code(f".else_{token["arguments"][0]}:\n")
+                else:
+                    self.add_assembly_code(f".endif_{token["arguments"][0]}:\n")
 
             case "LOOP":
                 self.add_assembly_code(f".loop_{token["arguments"][0]}:\n")
 
-            case "BREAK":
+            case "break":
                 self.add_assembly_code(f"jmp .endloop_{token["arguments"][0]}\n")
 
             case "ENDLOOP":
@@ -365,7 +480,11 @@ class Compiler:
 if __name__ == "__main__":
     print("Compiling...")
     lexer = Lexer("code.txt")
-    parser = Parser(lexer.tokenize())
+    try:
+        parser = Parser(lexer.tokenize())
+    except SyntaxError as e:
+        print(f"Syntax Error: {e}")
+        exit(1)
     compiler = Compiler(parser.parse())
     compiler.compile()
     print("Compilation Done!")
