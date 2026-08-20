@@ -11,7 +11,7 @@ def print_msg_and_measure_time(msg):
             start = time.perf_counter()
             return_value = func(*args, **kwargs)
             end = time.perf_counter()
-            print(f"Done - {((end - start) * 1000):.5f}ms")
+            print(f"Done - {((end - start) * 1000):.7f}ms")
             return return_value
         return wrapper
     return print_msg_and_measure_time_real_decorator
@@ -29,46 +29,6 @@ def is_valid_name(name):
         return False
 
     return True
-
-
-class Stack:
-    def __init__(self):
-        self.stack = []
-
-    def push(self, item):
-        self.stack.append(item)
-
-    def pop(self):
-        if not self.is_empty():
-            return self.stack.pop()
-        else:
-            raise IndexError("pop from empty stack")
-
-    def top(self):
-        if not self.is_empty():
-            return self.stack[-1]
-        else:
-            raise IndexError("top from empty stack")
-
-    def is_empty(self):
-        return len(self.stack) == 0
-
-    def size(self):
-        return len(self.stack)
-
-
-class Function:
-    def __init__(self, name, parameters_num):
-        self.name = name
-        self.parameter_count = parameters_num
-        self.local_variables_names = []
-        self.parameters_names = []
-        self.tokens = []
-        self.if_counter = 0
-        self.if_stack = Stack()
-        self.loop_counter = 0
-        self.loop_stack = Stack()
-        self.if_and_loop_stack = Stack()
 
 
 class Lexer:
@@ -167,6 +127,46 @@ class Lexer:
 
     def clear_buffer(self):
         self.buffer = ""
+
+
+class Stack:
+    def __init__(self):
+        self.stack = []
+
+    def push(self, item):
+        self.stack.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.stack.pop()
+        else:
+            raise IndexError("pop from empty stack")
+
+    def top(self):
+        if not self.is_empty():
+            return self.stack[-1]
+        else:
+            raise IndexError("top from empty stack")
+
+    def is_empty(self):
+        return len(self.stack) == 0
+
+    def size(self):
+        return len(self.stack)
+
+
+class Function:
+    def __init__(self, name, parameters_num):
+        self.name = name
+        self.parameter_count = parameters_num
+        self.local_variables_names = []
+        self.parameters_names = []
+        self.tokens = []
+        self.if_counter = 0
+        self.if_stack = Stack()
+        self.loop_counter = 0
+        self.loop_stack = Stack()
+        self.if_and_loop_stack = Stack()
 
 
 class Parser:
@@ -333,12 +333,12 @@ class Parser:
 
 
 class Compiler:
-    def __init__(self, program, output_file):
+    def __init__(self, program):
         self.program = program
         self.assembly_code = ""
         self.arguments_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
         self.comparison_jumps = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}
-        self.output_file = output_file
+        self.output_file = "output.asm"
 
     @print_msg_and_measure_time("Compiling...")
     def compile(self):
@@ -346,6 +346,7 @@ class Compiler:
         self.section_bss()
         self.section_text()
         self.save_assembly()
+        self.build_executable()
 
     def section_data(self):
         self.add_assembly_code("section .data\n")
@@ -524,31 +525,19 @@ class Compiler:
         with open(self.output_file, "w") as file:
             file.write(self.assembly_code)
 
-
-@print_msg_and_measure_time("Generating binary...")
-def generate_binary_from_nasm(nasm_code_source_path):
-    subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", nasm_code_source_path, "-o", "program.o"], check=True)
-    subprocess.run(["gcc", "-no-pie", "program.o", "-o", "program", "-lc"], check=True)
-
-
-def create_program(source_path, output_file):
-    start_time = time.perf_counter()
-
-    lexer = Lexer(source_path)
-    try:
-        tokens = lexer.tokenize()
-    except SyntaxError as e:
-        print(f"Syntax Error: {e}")
-        exit(1)
-    parser = Parser(tokens)
-    parsed_code = parser.parse()
-    compiler = Compiler(parsed_code, output_file)
-    compiler.compile()
-    generate_binary_from_nasm(output_file)
-
-    end_time = time.perf_counter()
-    print(f"Finished in {((end_time - start_time) * 1000):.5f}ms")
+    def build_executable(self):
+        subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", self.output_file, "-o", "program.o"], check=True)
+        subprocess.run(["gcc", "-no-pie", "program.o", "-o", "program", "-lc"], check=True)
 
 
 if __name__ == "__main__":
-    create_program("code.txt", "output.asm")
+    print("Compiling...")
+    lexer = Lexer("code.txt")
+    try:
+        parser = Parser(lexer.tokenize())
+    except SyntaxError as e:
+        print(f"Syntax Error: {e}")
+        exit(1)
+    compiler = Compiler(parser.parse())
+    compiler.compile()
+    print("Compilation Done!")
