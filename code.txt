@@ -191,13 +191,8 @@ ENDFN;
 
 FN: main, 0;
     int: exit_choice;
-    int: run, 1;
 
     LOOP;
-        IF: run, ==, 0;
-            break;
-        ENDIF;
-
         calculator;
 
         LOOP;
@@ -205,8 +200,7 @@ FN: main, 0;
             input_int: exit_choice;
 
             IF: exit_choice, ==, 2;
-            set: run, 0;
-                break;
+                return: 0;
             ELSE;
                 IF: exit_choice, !=, 1;
                     print: invalid_choice_prompt;

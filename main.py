@@ -1,91 +1,34 @@
 import subprocess
+import time
+from functools import wraps
 
 
-class Lexer:
-    def __init__(self, source_path):
-        self.source_path = source_path
-        self.source = open(source_path).read()
-        self.token_buffer = ""
-        self.tokens = []
-        self.current_instruction_name = ""
-        self.instruction_found = False
-        self.instruction_start_detected = False
-        self.current_arguments_list = []
-        self.in_comment = False
-        self.line_number = 1
-        self.instruction_start_line_number = 1
-        self.in_quote = False
+def print_msg_and_measure_time(msg):
+    def print_msg_and_measure_time_real_decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print(msg)
+            start = time.perf_counter()
+            return_value = func(*args, **kwargs)
+            end = time.perf_counter()
+            print(f"Done - {((end - start) * 1000):.5f}ms")
+            return return_value
+        return wrapper
+    return print_msg_and_measure_time_real_decorator
 
-    def tokenize(self):
-        for char in self.source:
-            if char == "#" and not self.in_comment and not self.in_quote:
-                self.in_comment = True
-            elif char == "\n" and self.in_comment:
-                self.in_comment = False
 
-            if char == "\"" and not self.in_comment:
-                self.in_quote = not self.in_quote
-                char = "`"
+def is_valid_name(name):
+    keywords = ["FN", "ENDFN", "return", "name_parameter", "IF", "ELSE", "ENDIF", "LOOP", "ENDLOOP",
+                "break", "int", "string", "print", "print_int", "input_int", "add", "sub", "mul",
+                "div", "mod", "set", "return_value"]
 
-            if self.in_quote:
-                self.token_buffer += char
+    if name in keywords:
+        return False
 
-            if char == "\n":
-                self.line_number += 1
+    if not name.isidentifier():
+        return False
 
-            if not char.isspace() and not self.in_comment and not self.in_quote:
-                match char:
-                    case ":":
-                        self.capture_instruction_name()
-                    case ",":
-                        self.capture_argument()
-                    case ";":
-                        self.finalize_instruction()
-                    case _:
-                        if not self.instruction_start_detected:
-                            self.instruction_start_line_number = self.line_number
-                            self.instruction_start_detected = True
-                        self.token_buffer += char
-        return self.tokens
-
-    def capture_instruction_name(self):
-        if self.instruction_found:
-            raise SyntaxError(f"Duplicate ':' in instruction at line {self.line_number}")
-
-        self.instruction_found = True
-        self.current_instruction_name = self.token_buffer
-        self.clear_buffer()
-
-    def capture_argument(self):
-        if not self.instruction_found:
-            raise SyntaxError(f"Argument found before instruction at line {self.line_number}")
-
-        try:
-            self.current_arguments_list.append(int(self.token_buffer))
-        except ValueError:
-            try:
-                self.current_arguments_list.append(float(self.token_buffer))
-            except ValueError:
-                self.current_arguments_list.append(self.token_buffer)
-        self.clear_buffer()
-
-    def finalize_instruction(self):
-
-        if not self.instruction_found:
-            self.capture_instruction_name()
-        else:
-            self.capture_argument()
-
-        self.instruction_start_detected = False
-
-        self.tokens.append({"instruction": self.current_instruction_name, "arguments": self.current_arguments_list,
-                            "line_number": self.instruction_start_line_number})
-        self.current_instruction_name = ""
-        self.current_arguments_list = []
-        self.instruction_found = False
-
-    def clear_buffer(self):
-        self.token_buffer = ""
+    return True
 
 
 class Stack:
@@ -114,20 +57,6 @@ class Stack:
         return len(self.stack)
 
 
-def is_valid_name(name):
-    keywords = ["FN", "ENDFN", "return", "name_parameter", "IF", "ELSE", "ENDIF", "LOOP", "ENDLOOP",
-                "break", "int", "string", "print", "print_int", "input_int", "add", "sub", "mul",
-                "div", "mod", "set", "return_value"]
-
-    if name in keywords:
-        return False
-
-    if not name.isidentifier():
-        return False
-
-    return True
-
-
 class Function:
     def __init__(self, name, parameters_num):
         self.name = name
@@ -142,12 +71,111 @@ class Function:
         self.if_and_loop_stack = Stack()
 
 
+class Lexer:
+    def __init__(self, source_path):
+        self.source_path = source_path
+        self.source = open(source_path).read()
+        self.buffer = ""
+        self.tokens = []
+        self.current_instruction_name = ""
+        self.instruction_found = False
+        self.instruction_start_detected = False
+        self.current_arguments_list = []
+        self.in_comment = False
+        self.line_number = 1
+        self.instruction_start_line_number = 1
+        self.in_quote = False
+
+    @print_msg_and_measure_time("Tokenizing...")
+    def tokenize(self):
+        for char in self.source:
+            if char == "#" and not self.in_comment and not self.in_quote:
+                self.in_comment = True
+            elif char == "\n" and self.in_comment:
+                self.in_comment = False
+
+            if char in ["\"", "`"] and not self.in_comment:
+                self.in_quote = not self.in_quote
+                char = "`"
+
+            if self.in_quote:
+                if self.buffer != "" and char == "`":
+                    raise SyntaxError(f"Wrong quote position - line {self.line_number}")
+                self.buffer += char
+
+            if char == "\n":
+                self.line_number += 1
+
+            if not char.isspace() and not self.in_comment and not self.in_quote:
+                match char:
+                    case ":":
+                        self.capture_instruction_name()
+                    case ",":
+                        self.capture_argument()
+                    case ";":
+                        self.finalize_instruction()
+                    case _:
+                        if not self.buffer == "" and self.buffer[-1] == "`":
+                            raise SyntaxError(f"Unexpected character after closing quote - line {self.line_number}")
+
+                        if not self.instruction_start_detected:
+                            self.instruction_start_line_number = self.line_number
+                            self.instruction_start_detected = True
+
+                        self.buffer += char
+
+        if self.in_quote:
+            raise SyntaxError("Unclosed quote")
+
+        return self.tokens
+
+    def capture_instruction_name(self):
+        if self.instruction_found:
+            raise SyntaxError(f"Duplicate ':' in instruction - line {self.line_number}")
+
+        self.instruction_found = True
+        self.current_instruction_name = self.buffer
+        self.clear_buffer()
+
+    def capture_argument(self):
+        if not self.instruction_found:
+            raise SyntaxError(f"Argument found before instruction - line {self.line_number}")
+
+        try:
+            self.current_arguments_list.append(int(self.buffer))
+        except ValueError:
+            try:
+                self.current_arguments_list.append(float(self.buffer))
+            except ValueError:
+                self.current_arguments_list.append(self.buffer)
+        self.clear_buffer()
+
+    def finalize_instruction(self):
+
+        if not self.instruction_found:
+            self.capture_instruction_name()
+        else:
+            self.capture_argument()
+
+        self.instruction_start_detected = False
+
+        self.tokens.append({"instruction": self.current_instruction_name, "arguments": self.current_arguments_list,
+                            "line_number": self.instruction_start_line_number})
+        self.current_instruction_name = ""
+        self.current_arguments_list = []
+        self.instruction_found = False
+
+    def clear_buffer(self):
+        self.buffer = ""
+
+
 class Parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
+    def __init__(self, given_tokens):
+        self.tokens = given_tokens
         self.program = {"functions": [], "uninitialized_global_variables": [], "initialized_global_variables": []}
         self.in_function_body = False
 
+    @print_msg_and_measure_time("Parsing...")
     def parse(self):
         for token in self.tokens:
             if token["instruction"] == "FN":
@@ -166,29 +194,29 @@ class Parser:
 
     def start_function(self, token):
         if self.in_function_body:
-            raise SyntaxError(f"Function cannot be inside another function at line {token['line_number']}")
+            raise SyntaxError(f"Function cannot be inside another function - line {token['line_number']}")
 
         if len(token["arguments"]) != 2:
-            raise SyntaxError(f"Wrong number of arguments for FN at line {token['line_number']}: expected 2, got {len(token["arguments"])}")
+            raise SyntaxError(f"Wrong number of arguments for FN: expected 2, got {len(token["arguments"])} - line {token['line_number']}")
 
         if not is_valid_name(token["arguments"][0]):
-            raise SyntaxError(f"Wrong function name '{token["arguments"][0]}' at line {token['line_number']}")
+            raise SyntaxError(f"Wrong function name '{token["arguments"][0]}' - line {token['line_number']}")
 
         if not isinstance(token["arguments"][1], int):
-            raise SyntaxError(f"Parameter count must be an integer number at line {token['line_number']}")
+            raise SyntaxError(f"Parameter count must be an integer- line {token['line_number']}")
 
         if token["arguments"][1] < 0 or token["arguments"][1] > 6:
-            raise SyntaxError(f"Parameter count must be between 0 and 6 (inclusive) at line {token['line_number']}")
+            raise SyntaxError(f"Parameter count must be between 0 and 6 (inclusive) - line {token['line_number']}")
 
         self.program["functions"].append(Function(token["arguments"][0], token["arguments"][1]))
         self.in_function_body = True
 
     def end_function(self, token):
         if not self.in_function_body:
-            raise SyntaxError(f"ENDFN without matching FN at line {token['line_number']}")
+            raise SyntaxError(f"ENDFN without matching FN - line {token['line_number']}")
 
         if len(token["arguments"]) != 0:
-            raise SyntaxError(f"Wrong number of arguments for ENDFN at line {token['line_number']}: expected 0, got {len(token["arguments"])}")
+            raise SyntaxError(f"Wrong number of arguments for ENDFN: expected 0, got {len(token["arguments"])} - line {token['line_number']}")
 
         function = self.get_current_function()
 
@@ -213,11 +241,11 @@ class Parser:
 
             case "ELSE":
                 if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "loop":
-                    raise SyntaxError(f"ELSE without matching IF at line {token['line_number']}")
+                    raise SyntaxError(f"ELSE without matching IF - line {token['line_number']}")
 
                 current_if = function.if_stack.pop()
                 if current_if["else"]:
-                    raise SyntaxError(f"Duplicate ELSE for the same IF at line {token['line_number']}")
+                    raise SyntaxError(f"Duplicate ELSE for the same IF - line {token['line_number']}")
                 current_if["else"] = True
                 token["arguments"].append(current_if["id"])
 
@@ -225,7 +253,7 @@ class Parser:
 
             case "ENDIF":
                 if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "loop":
-                    raise SyntaxError(f"ENDIF without matching IF at line {token['line_number']}")
+                    raise SyntaxError(f"ENDIF without matching IF - line {token['line_number']}")
 
                 current_if = function.if_stack.pop()
                 token["arguments"].append(current_if["id"])
@@ -243,14 +271,14 @@ class Parser:
 
             case "break":
                 if function.loop_stack.is_empty():
-                    raise SyntaxError(f"break outside of LOOP at line {token['line_number']}")
+                    raise SyntaxError(f"break outside of LOOP - line {token['line_number']}")
 
                 current_loop = function.loop_stack.top()
                 token["arguments"].append(current_loop["id"])
 
             case "ENDLOOP":
                 if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "if":
-                    raise SyntaxError(f"ENDLOOP without matching LOOP at line {token['line_number']}")
+                    raise SyntaxError(f"ENDLOOP without matching LOOP - line {token['line_number']}")
 
                 current_loop = function.loop_stack.pop()
                 token["arguments"].append(current_loop["id"])
@@ -266,34 +294,58 @@ class Parser:
         function.tokens.append(token)
 
     def append_global_variables(self, token):
-        if token["instruction"] == "int":
-            if len(token["arguments"]) == 1:
-                self.program["uninitialized_global_variables"].append({"type": "int", "name": token["arguments"][0]})
+        def check_first_argument():
+            if not is_valid_name(token["arguments"][0]):
+                raise SyntaxError(f"Wrong variable name '{token["arguments"][0]}' - line {token['line_number']}")
 
-            elif len(token["arguments"]) == 2:
-                self.program["initialized_global_variables"].append({"type": "int", "name": token["arguments"][0], "value": token["arguments"][1]})
+        match token["instruction"]:
+            case "int":
+                match len(token["arguments"]):
+                    case 1:
+                        check_first_argument()
+                        self.program["uninitialized_global_variables"].append({"type": "int", "name": token["arguments"][0]})
 
-        elif token["instruction"] == "string":
-            self.program["initialized_global_variables"].append({"type": "string", "name": token["arguments"][0], "value": token["arguments"][1]})
+                    case 2:
+                        check_first_argument()
+                        if not isinstance(token["arguments"][1], int):
+                            raise SyntaxError(f"The value of the global int variable must be an integer, not an another variable or a float - line {token['line_number']}")
+
+                        self.program["initialized_global_variables"].append({"type": "int", "name": token["arguments"][0], "value": token["arguments"][1]})
+
+                    case _:
+                        raise SyntaxError(f"Wrong number of arguments for int: expected 1 or 2, got {len(token["arguments"])} - line {token['line_number']}")
+
+            case "string":
+                if len(token["arguments"]) != 2:
+                    raise SyntaxError(f"Wrong number of arguments for string: expected  2, got {len(token["arguments"])} - line {token['line_number']}")
+
+                check_first_argument()
+                if (token["arguments"][1].count("`") != 2) or token["arguments"][1][0] != "`" or token["arguments"][1][-1] != "`":
+                    raise SyntaxError(f"The value of string must be in quotes, not be another variable or number - line {token['line_number']}")
+
+                self.program["initialized_global_variables"].append({"type": "string", "name": token["arguments"][0], "value": token["arguments"][1]})
+
+            case _:
+                raise SyntaxError(f"Only 'int' and 'string' instructions are allowed outside a function - line {token['line_number']}")
 
     def get_current_function(self):
         return self.program["functions"][-1]
 
 
 class Compiler:
-    def __init__(self, program):
+    def __init__(self, program, output_file):
         self.program = program
         self.assembly_code = ""
         self.arguments_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
         self.comparison_jumps = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}
-        self.output_file = "output.asm"
+        self.output_file = output_file
 
+    @print_msg_and_measure_time("Compiling...")
     def compile(self):
         self.section_data()
         self.section_bss()
         self.section_text()
         self.save_assembly()
-        self.build_executable()
 
     def section_data(self):
         self.add_assembly_code("section .data\n")
@@ -472,21 +524,31 @@ class Compiler:
         with open(self.output_file, "w") as file:
             file.write(self.assembly_code)
 
-    def build_executable(self):
-        subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", self.output_file, "-o", "program.o"], check=True)
-        subprocess.run(["gcc", "-no-pie", "program.o", "-o", "program", "-lc"], check=True)
+
+@print_msg_and_measure_time("Generating binary...")
+def generate_binary_from_nasm(nasm_code_source_path):
+    subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", nasm_code_source_path, "-o", "program.o"], check=True)
+    subprocess.run(["gcc", "-no-pie", "program.o", "-o", "program", "-lc"], check=True)
 
 
-if __name__ == "__main__":
-    print("Compiling...")
-    lexer = Lexer("code.txt")
+def create_program(source_path, output_file):
+    start_time = time.perf_counter()
+
+    lexer = Lexer(source_path)
     try:
-        parser = Parser(lexer.tokenize())
+        tokens = lexer.tokenize()
     except SyntaxError as e:
         print(f"Syntax Error: {e}")
         exit(1)
-    compiler = Compiler(parser.parse())
+    parser = Parser(tokens)
+    parsed_code = parser.parse()
+    compiler = Compiler(parsed_code, output_file)
     compiler.compile()
-    print("Compilation Done!")
-    # print("Running a program...")
-    # subprocess.run(["./program"], check=True)
+    generate_binary_from_nasm(output_file)
+
+    end_time = time.perf_counter()
+    print(f"Finished in {((end_time - start_time) * 1000):.5f}ms")
+
+
+if __name__ == "__main__":
+    create_program("code.txt", "output.asm")

@@ -402,15 +402,7 @@ push rbp
 mov rbp, rsp
 sub rsp, 16
 %define exit_choice [rbp-8]
-%define run [rbp-16]
-mov rax, 1
-mov run, rax
 .loop_0:
-mov rax, 0
-cmp run, rax
-jne .else_0
-jmp .endloop_0
-.else_0:
 call calculator
 .loop_1:
 mov rdi, exit_prompt
@@ -422,23 +414,22 @@ xor rax, rax
 call scanf
 mov rax, 2
 cmp exit_choice, rax
-jne .else_1
+jne .else_0
 mov rax, 0
-mov run, rax
-jmp .endloop_1
-jmp .endif_1
-.else_1:
+jmp .end
+jmp .endif_0
+.else_0:
 mov rax, 1
 cmp exit_choice, rax
-je .else_2
+je .else_1
 mov rdi, invalid_choice_prompt
 xor rax, rax
 call printf
-jmp .endif_2
-.else_2:
+jmp .endif_1
+.else_1:
 jmp .endloop_1
-.endif_2:
 .endif_1:
+.endif_0:
 jmp .loop_1
 .endloop_1:
 jmp .loop_0
@@ -447,7 +438,6 @@ mov rax, 0
 jmp .end
 .end:
 %undef exit_choice
-%undef run
 mov rsp, rbp
 pop rbp
 ret
