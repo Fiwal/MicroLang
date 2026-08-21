@@ -11,7 +11,7 @@ def print_msg_and_measure_time(msg):
             start = time.perf_counter()
             return_value = func(*args, **kwargs)
             end = time.perf_counter()
-            print(f"Done - {((end - start) * 1000):.7f}ms")
+            print(f"Done - {((end - start) * 1000):.5f}ms")
             return return_value
         return wrapper
     return print_msg_and_measure_time_real_decorator
@@ -199,6 +199,8 @@ class Parser:
         if len(token["arguments"]) != 2:
             raise SyntaxError(f"Wrong number of arguments for FN: expected 2, got {len(token["arguments"])} - line {token['line_number']}")
 
+        self.check_if_multiple(token["arguments"][0], token)
+
         if not is_valid_name(token["arguments"][0]):
             raise SyntaxError(f"Wrong function name '{token["arguments"][0]}' - line {token['line_number']}")
 
@@ -295,6 +297,7 @@ class Parser:
 
     def append_global_variables(self, token):
         def check_first_argument():
+            self.check_if_multiple(token["arguments"][0], token)
             if not is_valid_name(token["arguments"][0]):
                 raise SyntaxError(f"Wrong variable name '{token["arguments"][0]}' - line {token['line_number']}")
 
@@ -331,6 +334,18 @@ class Parser:
     def get_current_function(self):
         return self.program["functions"][-1]
 
+    def check_if_multiple(self, name, token):
+        for function in self.program["functions"]:
+            if function.name == name:
+                raise SyntaxError(f"Multiple name '{name}' - line {token['line_number']}")
+
+        for var in self.program["initialized_global_variables"]:
+            if var["name"] == name:
+                raise SyntaxError(f"Multiple name '{name}' - line {token['line_number']}")
+
+        for var in self.program["uninitialized_global_variables"]:
+            if var["name"] == name:
+                raise SyntaxError(f"Multiple name '{name}' - line {token['line_number']}")
 
 class Compiler:
     def __init__(self, program):
@@ -531,7 +546,6 @@ class Compiler:
 
 
 if __name__ == "__main__":
-    print("Compiling...")
     lexer = Lexer("code.txt")
     try:
         parser = Parser(lexer.tokenize())
@@ -540,4 +554,3 @@ if __name__ == "__main__":
         exit(1)
     compiler = Compiler(parser.parse())
     compiler.compile()
-    print("Compilation Done!")
