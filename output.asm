@@ -190,6 +190,10 @@ mov parameter_0, rdi
 mov parameter_1, rsi
 %define a parameter_0
 %define b parameter_1
+mov rdi, fmt_int?
+mov rsi, a
+xor rax, rax
+call printf
 mov rdi, a
 call absolute_value
 mov rax, return_value

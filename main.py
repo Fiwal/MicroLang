@@ -1,6 +1,12 @@
 import subprocess
 import time
 from functools import wraps
+from enum import Enum
+
+
+KEYWORDS = ["FN", "ENDFN", "return", "name_parameter", "IF", "ELSE", "ENDIF", "LOOP", "ENDLOOP",
+            "break", "int", "string", "print", "print_int", "input_int", "add", "sub", "mul",
+            "div", "mod", "set", "return_value"]
 
 
 def print_msg_and_measure_time(msg):
@@ -17,18 +23,9 @@ def print_msg_and_measure_time(msg):
     return print_msg_and_measure_time_real_decorator
 
 
+
 def is_valid_name(name):
-    keywords = ["FN", "ENDFN", "return", "name_parameter", "IF", "ELSE", "ENDIF", "LOOP", "ENDLOOP",
-                "break", "int", "string", "print", "print_int", "input_int", "add", "sub", "mul",
-                "div", "mod", "set", "return_value"]
-
-    if name in keywords:
-        return False
-
-    if not name.isidentifier():
-        return False
-
-    return True
+    return False if isinstance(name, int) or name in KEYWORDS or not name.isidentifier() else True
 
 
 class Lexer:
@@ -59,7 +56,7 @@ class Lexer:
                 char = "`"
 
             if self.in_quote:
-                if self.buffer != "" and char == "`":
+                if not self.buffer in ["", "`"] and char == "`":
                     raise SyntaxError(f"Wrong quote position - line {self.line_number}")
                 self.buffer += char
 
@@ -75,7 +72,7 @@ class Lexer:
                     case ";":
                         self.finalize_instruction()
                     case _:
-                        if not self.buffer == "" and self.buffer[-1] == "`":
+                        if not self.buffer in ["", "`"] and self.buffer[-1] == "`":
                             raise SyntaxError(f"Unexpected character after closing quote - line {self.line_number}")
 
                         if not self.instruction_start_detected:
@@ -159,14 +156,178 @@ class Function:
     def __init__(self, name, parameters_num):
         self.name = name
         self.parameter_count = parameters_num
-        self.local_variables_names = []
-        self.parameters_names = []
+        self.local_variables = []
+        self.parameters = []
         self.tokens = []
         self.if_counter = 0
         self.if_stack = Stack()
         self.loop_counter = 0
         self.loop_stack = Stack()
         self.if_and_loop_stack = Stack()
+
+    class NameType(Enum):
+        FUNCTION = 1
+        INT_VARIABLE = 2
+        STRING_VARIABLE = 3
+        PARAMETER = 4
+        RETURN_VALUE = 5
+        NOT_FOUND = 6
+
+    def parse_function(self, program):
+        for token in self.tokens:
+            match token["instruction"]:
+                case "int":
+                    if not len(token["arguments"]) in [1, 2]:
+                        raise SyntaxError(f"Wrong number of arguments for int: expected 1 or 2, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    if not is_valid_name(token["arguments"][0]):
+                        raise SyntaxError(f"Wrong variable name '{token["arguments"][0]}' - line {token['line_number']}")
+
+                    if not self.check_name(token["arguments"][0], program) == self.NameType.NOT_FOUND:
+                        raise SyntaxError(f"Multiple name '{token["arguments"][0]}' - line {token['line_number']}")
+
+                    if len(token["arguments"]) == 2 and not isinstance(token["arguments"][1], int) and not self.check_name(token["arguments"][1], program) in [self.NameType.INT_VARIABLE, self.NameType.PARAMETER, self.NameType.RETURN_VALUE]:
+                        raise SyntaxError(f"Wrong second argument for int '{token["arguments"][1]}' - line {token['line_number']}")
+
+                    self.local_variables.append(token["arguments"][0])
+                    token["arguments"].append(len(self.local_variables))
+
+                #pierwsza zmienna, druga liczba lub return value lub zmienna
+                case "set" | "add" | "sub" | "mul"| "div" | "mod":
+                    pass
+
+                case "print_int" | "input_int":
+                    if not len(token["arguments"]) == 1:
+                        raise SyntaxError(f"Wrong number of arguments for int: expected 1, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    name_type = self.check_name(token["arguments"][0], program)
+
+                    if not isinstance(token["arguments"][0], int) and not name_type in [self.NameType.INT_VARIABLE, self.NameType.PARAMETER, self.NameType.RETURN_VALUE]:
+                        raise SyntaxError(f"Wrong argument '{token["arguments"][0]}' - line {token['line_number']}")
+
+                    if token["instruction"] == "input_int" and (name_type == self.NameType.RETURN_VALUE or isinstance(token["arguments"][0], int)):
+                        raise SyntaxError(f"Wrong argument '{token["arguments"][0]}' - line {token['line_number']}")
+
+                case "print":
+                    if not len(token["arguments"]) in [1, 2]:
+                        raise SyntaxError(f"Wrong number of arguments for print: expected 1, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    if isinstance(token["arguments"][0], int) or not self.check_name(token["arguments"][0], program) == self.NameType.STRING_VARIABLE:
+                        raise SyntaxError(f"Wrong argument for print '{token["arguments"][0]}', it must be a string variable - line {token['line_number']}")
+
+                #zmienne, liczby, mozna zwrocic return_value
+                case "return":
+                    pass
+
+                #duzo - znak, zmienne, liczby
+                case "IF":
+                    self.if_stack.push({"else": False, "id": self.if_counter})
+                    token["arguments"].append(self.if_counter)
+
+                    self.if_counter += 1
+                    self.if_and_loop_stack.push("if")
+
+                case "ELSE":
+                    if not len(token["arguments"]) == 0:
+                        raise SyntaxError(f"Wrong number of arguments for ELSE: expected 0, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.top() == "loop":
+                        raise SyntaxError(f"ELSE without matching IF - line {token['line_number']}")
+
+                    current_if = self.if_stack.pop()
+                    if current_if["else"]:
+                        raise SyntaxError(f"Duplicate ELSE for the same IF - line {token['line_number']}")
+                    current_if["else"] = True
+                    token["arguments"].append(current_if["id"])
+
+                    self.if_stack.push(current_if)
+
+                case "ENDIF":
+                    if not len(token["arguments"]) == 0:
+                        raise SyntaxError(f"Wrong number of arguments for ENDIF: expected 0, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.top() == "loop":
+                        raise SyntaxError(f"ENDIF without matching IF - line {token['line_number']}")
+
+                    current_if = self.if_stack.pop()
+                    token["arguments"].append(current_if["id"])
+                    if not current_if["else"]:
+                        token["arguments"].append("no else")
+
+                    self.if_and_loop_stack.pop()
+
+                case "LOOP":
+                    if not len(token["arguments"]) == 0:
+                        raise SyntaxError(f"Wrong number of arguments for LOOP: expected 0, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    self.loop_stack.push({"id": self.loop_counter})
+                    token["arguments"].append(self.loop_counter)
+
+                    self.loop_counter += 1
+                    self.if_and_loop_stack.push("loop")
+
+                case "break":
+                    if not len(token["arguments"]) == 0:
+                        raise SyntaxError(f"Wrong number of arguments for break: expected 0, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    if self.loop_stack.is_empty():
+                        raise SyntaxError(f"break outside of LOOP - line {token['line_number']}")
+
+                    current_loop = self.loop_stack.top()
+                    token["arguments"].append(current_loop["id"])
+
+                case "ENDLOOP":
+                    if not len(token["arguments"]) == 0:
+                        raise SyntaxError(f"Wrong number of arguments for ENDLOOP: expected 0, got {len(token['arguments'])} - line {token['line_number']}")
+
+                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.top() == "if":
+                        raise SyntaxError(f"ENDLOOP without matching LOOP - line {token['line_number']}")
+
+                    current_loop = self.loop_stack.pop()
+                    token["arguments"].append(current_loop["id"])
+                    self.if_and_loop_stack.pop()
+
+                #nazwa, numer
+                case "name_parameter":
+                    self.parameters.append(token["arguments"][0])
+
+                case _:
+                    pass
+
+    def check_name(self, name, program):
+
+        for function in program["functions"]:
+            if function.name == name:
+                return self.NameType.FUNCTION
+
+        for var in program["initialized_global_variables"]:
+            if var["name"] == name:
+                if var["type"] == "int":
+                    return self.NameType.INT_VARIABLE
+                if var["type"] == "string":
+                    return self.NameType.STRING_VARIABLE
+
+        for var in program["uninitialized_global_variables"]:
+            if var["name"] == name:
+                if var["type"] == "int":
+                    return self.NameType.INT_VARIABLE
+
+        for var in self.local_variables:
+            if var == name:
+                return self.NameType.INT_VARIABLE
+
+        for parameter in self.parameters:
+            if parameter == name:
+                return self.NameType.PARAMETER
+
+        for i in range(0, 6):
+            if name == f"parameter_{i}":
+                return self.NameType.PARAMETER
+
+        if name == "return_value":
+            return self.NameType.RETURN_VALUE
+
+        return self.NameType.NOT_FOUND
 
 
 class Parser:
@@ -190,6 +351,8 @@ class Parser:
         if self.in_function_body:
             raise SyntaxError(f"Unclosed function '{self.get_current_function().name}'")
 
+        self.parse_functions()
+
         return self.program
 
     def start_function(self, token):
@@ -205,7 +368,7 @@ class Parser:
             raise SyntaxError(f"Wrong function name '{token["arguments"][0]}' - line {token['line_number']}")
 
         if not isinstance(token["arguments"][1], int):
-            raise SyntaxError(f"Parameter count must be an integer- line {token['line_number']}")
+            raise SyntaxError(f"Parameter count must be an integer - line {token['line_number']}")
 
         if token["arguments"][1] < 0 or token["arguments"][1] > 6:
             raise SyntaxError(f"Parameter count must be between 0 and 6 (inclusive) - line {token['line_number']}")
@@ -232,66 +395,6 @@ class Parser:
 
     def append_instruction(self, token):
         function = self.get_current_function()
-
-        match token["instruction"]:
-            case "IF":
-                function.if_stack.push({"else": False, "id": function.if_counter})
-                token["arguments"].append(function.if_counter)
-
-                function.if_counter += 1
-                function.if_and_loop_stack.push("if")
-
-            case "ELSE":
-                if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "loop":
-                    raise SyntaxError(f"ELSE without matching IF - line {token['line_number']}")
-
-                current_if = function.if_stack.pop()
-                if current_if["else"]:
-                    raise SyntaxError(f"Duplicate ELSE for the same IF - line {token['line_number']}")
-                current_if["else"] = True
-                token["arguments"].append(current_if["id"])
-
-                function.if_stack.push(current_if)
-
-            case "ENDIF":
-                if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "loop":
-                    raise SyntaxError(f"ENDIF without matching IF - line {token['line_number']}")
-
-                current_if = function.if_stack.pop()
-                token["arguments"].append(current_if["id"])
-                if not current_if["else"]:
-                    token["arguments"].append("no else")
-
-                function.if_and_loop_stack.pop()
-
-            case "LOOP":
-                function.loop_stack.push({"id": function.loop_counter})
-                token["arguments"].append(function.loop_counter)
-
-                function.loop_counter += 1
-                function.if_and_loop_stack.push("loop")
-
-            case "break":
-                if function.loop_stack.is_empty():
-                    raise SyntaxError(f"break outside of LOOP - line {token['line_number']}")
-
-                current_loop = function.loop_stack.top()
-                token["arguments"].append(current_loop["id"])
-
-            case "ENDLOOP":
-                if function.if_and_loop_stack.is_empty() or function.if_and_loop_stack.top() == "if":
-                    raise SyntaxError(f"ENDLOOP without matching LOOP - line {token['line_number']}")
-
-                current_loop = function.loop_stack.pop()
-                token["arguments"].append(current_loop["id"])
-                function.if_and_loop_stack.pop()
-
-            case "int":
-                function.local_variables_names.append(token["arguments"][0])
-                token["arguments"].append(len(function.local_variables_names))
-
-            case "name_parameter":
-                function.parameters_names.append(token["arguments"][0])
 
         function.tokens.append(token)
 
@@ -347,6 +450,11 @@ class Parser:
             if var["name"] == name:
                 raise SyntaxError(f"Multiple name '{name}' - line {token['line_number']}")
 
+    def parse_functions(self):
+        for function in self.program["functions"]:
+            function.parse_function(self.program)
+
+
 class Compiler:
     def __init__(self, program):
         self.program = program
@@ -399,10 +507,10 @@ class Compiler:
                 "push rbp\n"
                 "mov rbp, rsp\n")
 
-            if ((len(function.local_variables_names) + function.parameter_count) * 8) % 16 == 0:
-                self.add_assembly_code(f"sub rsp, {(len(function.local_variables_names) + function.parameter_count) * 8}\n")
+            if ((len(function.local_variables) + function.parameter_count) * 8) % 16 == 0:
+                self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8}\n")
             else:
-                self.add_assembly_code(f"sub rsp, {(len(function.local_variables_names) + function.parameter_count) * 8 + 8}\n")
+                self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8 + 8}\n")
 
             for i in range(function.parameter_count):
                 self.add_assembly_code(f"%define parameter_{i} [rbp-{(i+1)*8}]\n")
@@ -416,10 +524,10 @@ class Compiler:
             for i in range(function.parameter_count):
                 self.add_assembly_code(f"%undef parameter_{i}\n")
 
-            for local_var in function.local_variables_names:
+            for local_var in function.local_variables:
                 self.add_assembly_code(f"%undef {local_var}\n")
 
-            for parameter_name in function.parameters_names:
+            for parameter_name in function.parameters:
                 self.add_assembly_code(f"%undef {parameter_name}\n")
 
             self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
