@@ -159,7 +159,6 @@ class Function:
                     token["arguments"].append(current_loop["id"])
                     self.if_and_loop_stack.pop()
 
-
                 #TODO: nazwa, numer
                 case "name_parameter":
                     self.parameters.append(token["arguments"][0])
