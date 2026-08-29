@@ -55,8 +55,9 @@ mov counter, rax
 mov rax, 1
 mov result, rax
 .loop_0:
-mov rax, b
-cmp counter, rax
+mov r8, counter
+mov r9, b
+cmp r8, r9
 jne .else_0
 jmp .endloop_0
 .else_0:
@@ -86,8 +87,9 @@ sub rsp, 16
 %define parameter_0 [rbp-8]
 mov parameter_0, rdi
 %define a parameter_0
-mov rax, 0
-cmp a, rax
+mov r8, a
+mov r9, 0
+cmp r8, r9
 jge .else_0
 mov rax, a
 imul rax, -1
@@ -113,8 +115,9 @@ mov parameter_0, rdi
 mov parameter_1, rsi
 %define a parameter_0
 %define b parameter_1
-mov rax, 0
-cmp b, rax
+mov r8, b
+mov r9, 0
+cmp r8, r9
 je .else_0
 mov r11, b
 mov rax, a
@@ -155,14 +158,16 @@ mov rdi, b
 call absolute_value
 mov rax, return_value
 mov b, rax
-mov rax, 0
-cmp a, rax
+mov r8, a
+mov r9, 0
+cmp r8, r9
 jne .else_0
 mov rax, b
 jmp .end
 .else_0:
-mov rax, 0
-cmp b, rax
+mov r8, b
+mov r9, 0
+cmp r8, r9
 jne .else_1
 mov rax, a
 jmp .end
@@ -190,10 +195,6 @@ mov parameter_0, rdi
 mov parameter_1, rsi
 %define a parameter_0
 %define b parameter_1
-mov rdi, fmt_int?
-mov rsi, a
-xor rax, rax
-call printf
 mov rdi, a
 call absolute_value
 mov rax, return_value
@@ -208,8 +209,9 @@ mov c, rax
 mov rax, c
 imul rax, b
 mov c, rax
-mov rax, 0
-cmp c, rax
+mov r8, c
+mov r9, 0
+cmp r8, r9
 jne .else_0
 mov rax, 0
 jmp .end
@@ -261,8 +263,9 @@ mov rdi, fmt_int?
 lea rsi, operation_type
 xor rax, rax
 call scanf
-mov rax, 1
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 1
+cmp r8, r9
 jne .else_0
 mov rax, b
 add a, rax
@@ -270,8 +273,9 @@ mov rdi, a
 call print_result
 jmp .end
 .else_0:
-mov rax, 2
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 2
+cmp r8, r9
 jne .else_1
 mov rax, b
 sub a, rax
@@ -279,8 +283,9 @@ mov rdi, a
 call print_result
 jmp .end
 .else_1:
-mov rax, 3
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 3
+cmp r8, r9
 jne .else_2
 mov rax, a
 imul rax, b
@@ -289,11 +294,13 @@ mov rdi, a
 call print_result
 jmp .end
 .else_2:
-mov rax, 4
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 4
+cmp r8, r9
 jne .else_3
-mov rax, 0
-cmp b, rax
+mov r8, b
+mov r9, 0
+cmp r8, r9
 je .else_4
 mov r11, b
 mov rax, a
@@ -311,11 +318,13 @@ call printf
 jmp .end
 .endif_4:
 .else_3:
-mov rax, 5
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 5
+cmp r8, r9
 jne .else_5
-mov rax, 0
-cmp b, rax
+mov r8, b
+mov r9, 0
+cmp r8, r9
 je .else_6
 mov r11, b
 mov rax, a
@@ -333,11 +342,13 @@ call printf
 jmp .end
 .endif_6:
 .else_5:
-mov rax, 6
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 6
+cmp r8, r9
 jne .else_7
-mov rax, 0
-cmp b, rax
+mov r8, b
+mov r9, 0
+cmp r8, r9
 jl .else_8
 mov rdi, a
 mov rsi, b
@@ -355,14 +366,17 @@ call printf
 jmp .end
 .endif_8:
 .else_7:
-mov rax, 7
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 7
+cmp r8, r9
 jne .else_9
-mov rax, 0
-cmp a, rax
+mov r8, a
+mov r9, 0
+cmp r8, r9
 jne .else_10
-mov rax, 0
-cmp b, rax
+mov r8, b
+mov r9, 0
+cmp r8, r9
 jne .else_11
 mov rdi, gcd_error_prompt
 xor rax, rax
@@ -373,14 +387,15 @@ jmp .end
 mov rdi, a
 mov rsi, b
 call GCD
-mov rax, return_value
-mov a, rax
-mov rdi, a
-call print_result
+mov rdi, fmt_int?
+mov rsi, return_value
+xor rax, rax
+call printf
 jmp .end
 .else_9:
-mov rax, 8
-cmp operation_type, rax
+mov r8, operation_type
+mov r9, 8
+cmp r8, r9
 jne .else_12
 mov rdi, a
 mov rsi, b
@@ -416,15 +431,17 @@ mov rdi, fmt_int?
 lea rsi, exit_choice
 xor rax, rax
 call scanf
-mov rax, 2
-cmp exit_choice, rax
+mov r8, exit_choice
+mov r9, 2
+cmp r8, r9
 jne .else_0
 mov rax, 0
 jmp .end
 jmp .endif_0
 .else_0:
-mov rax, 1
-cmp exit_choice, rax
+mov r8, exit_choice
+mov r9, 1
+cmp r8, r9
 je .else_1
 mov rdi, invalid_choice_prompt
 xor rax, rax

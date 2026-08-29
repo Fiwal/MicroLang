@@ -174,8 +174,7 @@ FN: calculator, 0;
         ENDIF;
 
         GCD: a, b;
-        set: a, return_value;
-        print_result: a;
+        print_int: return_value;
         return;
     ENDIF;
 

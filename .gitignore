@@ -1,5 +1,9 @@
-*
-!.gitignore
-!code.txt
-!main.py
-!output.asm
+**/__pycache__/
+.idea
+.vscode
+.venv
+.codex
+program
+program.o
+
+
