@@ -1,4 +1,5 @@
-from src.utils import print_msg_and_measure_time
+from src.exceptions.error import Error
+from src.utils import measure_time
 
 
 class Lexer:
@@ -16,7 +17,7 @@ class Lexer:
         self.instruction_start_line_number = 1
         self.in_quote = False
 
-    @print_msg_and_measure_time("Tokenizing...")
+    @measure_time("Tokenizing...")
     def tokenize(self):
         for char in self.source:
             if char == "#" and not self.in_comment and not self.in_quote:
@@ -30,7 +31,7 @@ class Lexer:
 
             if self.in_quote:
                 if not self.buffer in ["", "`"] and char == "`":
-                    raise SyntaxError(f"Wrong quote position - line {self.line_number}")
+                    raise Error(f"Wrong quote position - line {self.line_number}")
                 self.buffer += char
 
             if char == "\n":
@@ -46,7 +47,7 @@ class Lexer:
                         self.finalize_instruction()
                     case _:
                         if not self.buffer in ["", "`"] and self.buffer[-1] == "`":
-                            raise SyntaxError(f"Unexpected character after closing quote - line {self.line_number}")
+                            raise Error(f"Unexpected character after closing quote - line {self.line_number}")
 
                         if not self.instruction_start_detected:
                             self.instruction_start_line_number = self.line_number
@@ -55,13 +56,13 @@ class Lexer:
                         self.buffer += char
 
         if self.in_quote:
-            raise SyntaxError("Unclosed quote")
+            raise Error("Unclosed quote")
 
         return self.tokens
 
     def capture_instruction_name(self):
         if self.instruction_found:
-            raise SyntaxError(f"Duplicate ':' in instruction - line {self.line_number}")
+            raise Error(f"Duplicate ':' in instruction - line {self.line_number}")
 
         self.instruction_found = True
         self.current_instruction_name = self.buffer
@@ -69,7 +70,7 @@ class Lexer:
 
     def capture_argument(self):
         if not self.instruction_found:
-            raise SyntaxError(f"Argument found before instruction - line {self.line_number}")
+            raise Error(f"Argument found before instruction - line {self.line_number}")
 
         try:
             self.current_arguments_list.append(int(self.buffer))
@@ -89,7 +90,7 @@ class Lexer:
 
         self.instruction_start_detected = False
 
-        self.tokens.append({"instruction": self.current_instruction_name, "arguments": self.current_arguments_list,
+        self.tokens.append({"name": self.current_instruction_name, "arguments": self.current_arguments_list,
                             "line_number": self.instruction_start_line_number})
         self.current_instruction_name = ""
         self.current_arguments_list = []

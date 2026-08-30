@@ -1,16 +1,25 @@
 from src.lexer import Lexer
 from src.parser import Parser
 from src.compiler import Compiler
+from src.exceptions.error import Error
 
 
 def main():
     lexer = Lexer("code.txt")
     try:
-        parser = Parser(lexer.tokenize())
-    except SyntaxError as e:
-        print(f"Syntax Error: {e}")
+        tokens = lexer.tokenize()
+    except Error as e:
+        print(f"\033[1;31mError: {e}\033[0m")
         return
-    compiler = Compiler(parser.parse())
+
+    parser = Parser(tokens)
+    try:
+        ast = parser.parse()
+    except Error as e:
+        print(f"\033[1;31mError: {e}\033[0m")
+        return
+
+    compiler = Compiler(ast)
     compiler.compile()
 
 if __name__ == "__main__":

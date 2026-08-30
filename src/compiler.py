@@ -1,17 +1,17 @@
 import subprocess
 
-from src.utils import print_msg_and_measure_time
+from src.utils import measure_time
 from src.function import Function
 
 class Compiler:
-    def __init__(self, program):
-        self.program = program
+    def __init__(self, ast):
+        self.ast = ast
         self.assembly_code = ""
         self.arguments_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
         self.comparison_jumps = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}
         self.output_file = "output.asm"
 
-    @print_msg_and_measure_time("Compiling...")
+    @measure_time("Compiling...")
     def compile(self):
         self.section_data()
         self.section_bss()
@@ -24,7 +24,7 @@ class Compiler:
 
         self.add_assembly_code("fmt_int? db \"%lld\", 0\n")
 
-        for var in self.program["initialized_global_variables"]:
+        for var in self.ast["initialized_global_variables"]:
             if var["type"] == "int":
                 self.add_assembly_code(
                     f"{var["name"]}? dq {var["value"]}\n"
@@ -35,7 +35,7 @@ class Compiler:
     def section_bss(self):
         self.add_assembly_code("section .bss\n")
 
-        for var in self.program["uninitialized_global_variables"]:
+        for var in self.ast["uninitialized_global_variables"]:
             if var["type"] == "int":
                 self.add_assembly_code(
                     f"{var["name"]}? resq 1\n"
@@ -49,7 +49,7 @@ class Compiler:
             "extern scanf\n"
             "%define return_value rax\n")
 
-        for function in self.program["functions"]:
+        for function in self.ast["functions"]:
             self.add_assembly_code(
                 f"{function.name}:\n"
                 "push rbp\n"
@@ -81,7 +81,7 @@ class Compiler:
             self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
 
     def change_token_to_assembly(self, token, function):
-        match token["instruction"]:
+        match token["name"]:
             case "int":
                 if len(token["arguments"]) == 2:
                     self.add_assembly_code(f"%define {token["arguments"][0]} [rbp-{(token["arguments"][1] + function.parameter_count) * 8}]\n")
@@ -188,7 +188,7 @@ class Compiler:
             case _:
                 for k in range(len(token["arguments"])):
                     self.add_assembly_code(f"mov {self.arguments_registers[k]}, {token["arguments"][k]}\n")
-                self.add_assembly_code(f"call {token["instruction"]}\n")
+                self.add_assembly_code(f"call {token['name']}\n")
 
     def add_assembly_code(self, code):
         self.assembly_code += code
