@@ -1,4 +1,4 @@
-from src.exceptions.error import Error
+from src.exceptions import Error
 from src.utils.stack import Stack
 from src.utils.name_validator import is_valid_name
 from src.utils.name_resolver import check_name_type as check_name

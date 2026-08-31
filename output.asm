@@ -416,7 +416,7 @@ call printf
 mov rsp, rbp
 pop rbp
 ret
-main:
+calculate:
 push rbp
 mov rbp, rsp
 sub rsp, 16

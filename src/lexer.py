@@ -1,4 +1,4 @@
-from src.exceptions.error import Error
+from src.exceptions import Error
 from src.utils.decorators import measure_time
 from src.structures.token import Token
 

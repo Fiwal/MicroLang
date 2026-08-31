@@ -1,7 +1,9 @@
-from src.exceptions.error import Error
+from src.exceptions import Error
+from src.structures.function import Function
+from src.enums.name_type import NameType
 from src.utils.decorators import measure_time
 from src.utils.name_validator import is_valid_name
-from src.structures.function import Function
+from src.utils.name_resolver import check_name_type
 
 
 class Parser:
@@ -36,7 +38,8 @@ class Parser:
         if len(token.arguments) != 2:
             raise Error(f"Wrong number of arguments for FN: expected 2, got {len(token.arguments)} - line {token.line}")
 
-        self.check_if_multiple(token.arguments[0], token)
+        if check_name_type(token.arguments[0], self.parsed_program) != NameType.NOT_FOUND:
+            raise Error(f"Multiple name '{token.arguments[0]}' - line {token.line}")
 
         if not is_valid_name(token.arguments[0]):
             raise Error(f"Wrong function name '{token.arguments[0]}' - line {token.line}")
@@ -74,9 +77,10 @@ class Parser:
 
     def append_global_variables(self, token):
         def check_first_argument():
-            self.check_if_multiple(token.arguments[0], token)
             if not is_valid_name(token.arguments[0]):
                 raise Error(f"Wrong variable name '{token.arguments[0]}' - line {token.line}")
+            if check_name_type(token.arguments[0], self.parsed_program) != NameType.NOT_FOUND:
+                raise Error(f"Multiple name '{token.arguments[0]}' - line {token.line}")
 
         match token.name:
             case "int":
@@ -110,19 +114,6 @@ class Parser:
 
     def get_current_function(self):
         return self.parsed_program["functions"][-1]
-
-    def check_if_multiple(self, name, token):
-        for function in self.parsed_program["functions"]:
-            if function.name == name:
-                raise Error(f"Multiple name '{name}' - line {token.line}")
-
-        for var in self.parsed_program["initialized_global_variables"]:
-            if var["name"] == name:
-                raise Error(f"Multiple name '{name}' - line {token.line}")
-
-        for var in self.parsed_program["uninitialized_global_variables"]:
-            if var["name"] == name:
-                raise Error(f"Multiple name '{name}' - line {token.line}")
 
     def parse_functions(self):
         for function in self.parsed_program["functions"]:
