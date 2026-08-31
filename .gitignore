@@ -3,5 +3,5 @@
 .vscode
 .venv
 .codex
-program
-program.o
+parsed_program
+parsed_program.o

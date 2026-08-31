@@ -1,11 +1,11 @@
 import subprocess
 
-from src.utils import measure_time
-from src.function import Function
+from src.utils.decorators import measure_time
+from src.structures.function import Function
 
 class Compiler:
-    def __init__(self, ast):
-        self.ast = ast
+    def __init__(self, parsed_program):
+        self.parsed_program = parsed_program
         self.assembly_code = ""
         self.arguments_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
         self.comparison_jumps = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}
@@ -24,7 +24,7 @@ class Compiler:
 
         self.add_assembly_code("fmt_int? db \"%lld\", 0\n")
 
-        for var in self.ast["initialized_global_variables"]:
+        for var in self.parsed_program["initialized_global_variables"]:
             if var["type"] == "int":
                 self.add_assembly_code(
                     f"{var["name"]}? dq {var["value"]}\n"
@@ -35,7 +35,7 @@ class Compiler:
     def section_bss(self):
         self.add_assembly_code("section .bss\n")
 
-        for var in self.ast["uninitialized_global_variables"]:
+        for var in self.parsed_program["uninitialized_global_variables"]:
             if var["type"] == "int":
                 self.add_assembly_code(
                     f"{var["name"]}? resq 1\n"
@@ -49,7 +49,7 @@ class Compiler:
             "extern scanf\n"
             "%define return_value rax\n")
 
-        for function in self.ast["functions"]:
+        for function in self.parsed_program["functions"]:
             self.add_assembly_code(
                 f"{function.name}:\n"
                 "push rbp\n"
@@ -81,114 +81,114 @@ class Compiler:
             self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
 
     def change_token_to_assembly(self, token, function):
-        match token["name"]:
+        match token.name:
             case "int":
-                if len(token["arguments"]) == 2:
-                    self.add_assembly_code(f"%define {token["arguments"][0]} [rbp-{(token["arguments"][1] + function.parameter_count) * 8}]\n")
-                elif len(token["arguments"]) == 3:
+                if len(token.arguments) == 2:
+                    self.add_assembly_code(f"%define {token.arguments[0]} [rbp-{(token.arguments[1] + function.parameter_count) * 8}]\n")
+                elif len(token.arguments) == 3:
                     self.add_assembly_code(
-                        f"%define {token["arguments"][0]} [rbp-{(token["arguments"][2] + function.parameter_count) * 8}]\n"
-                        f"mov rax, {token["arguments"][1]}\n"
-                        f"mov {token["arguments"][0]}, rax\n")
+                        f"%define {token.arguments[0]} [rbp-{(token.arguments[2] + function.parameter_count) * 8}]\n"
+                        f"mov rax, {token.arguments[1]}\n"
+                        f"mov {token.arguments[0]}, rax\n")
 
             case "set":
                 self.add_assembly_code(
-                    f"mov rax, {token["arguments"][1]}\n"
-                    f"mov {token["arguments"][0]}, rax\n")
+                    f"mov rax, {token.arguments[1]}\n"
+                    f"mov {token.arguments[0]}, rax\n")
 
             case "add":
                 self.add_assembly_code(
-                    f"mov rax, {token["arguments"][1]}\n"
-                    f"add {token["arguments"][0]}, rax\n")
+                    f"mov rax, {token.arguments[1]}\n"
+                    f"add {token.arguments[0]}, rax\n")
 
             case "sub":
                 self.add_assembly_code(
-                    f"mov rax, {token["arguments"][1]}\n"
-                    f"sub {token["arguments"][0]}, rax\n")
+                    f"mov rax, {token.arguments[1]}\n"
+                    f"sub {token.arguments[0]}, rax\n")
 
             case "mul":
                 self.add_assembly_code(
-                    f"mov rax, {token["arguments"][0]}\n"
-                    f"imul rax, {token["arguments"][1]}\n"
-                    f"mov {token["arguments"][0]}, rax\n")
+                    f"mov rax, {token.arguments[0]}\n"
+                    f"imul rax, {token.arguments[1]}\n"
+                    f"mov {token.arguments[0]}, rax\n")
 
             case "div":
                 self.add_assembly_code(
-                    f"mov r11, {token["arguments"][1]}\n"
-                    f"mov rax, {token["arguments"][0]}\n"
+                    f"mov r11, {token.arguments[1]}\n"
+                    f"mov rax, {token.arguments[0]}\n"
                     "cqo\n"
                     "idiv r11\n"
-                    f"mov {token["arguments"][0]}, rax\n")
+                    f"mov {token.arguments[0]}, rax\n")
 
             case "mod":
                 self.add_assembly_code(
-                    f"mov r11, {token["arguments"][1]}\n"
-                    f"mov rax, {token["arguments"][0]}\n"
+                    f"mov r11, {token.arguments[1]}\n"
+                    f"mov rax, {token.arguments[0]}\n"
                     "cqo\n"
                     "idiv r11\n"
-                    f"mov {token["arguments"][0]}, rdx\n")
+                    f"mov {token.arguments[0]}, rdx\n")
 
             case "print_int":
                 self.add_assembly_code(
                     "mov rdi, fmt_int?\n"
-                    f"mov rsi, {token["arguments"][0]}\n"
+                    f"mov rsi, {token.arguments[0]}\n"
                     "xor rax, rax\n"
                     "call printf\n")
 
             case "input_int":
                 self.add_assembly_code(
                     "mov rdi, fmt_int?\n"
-                    f"lea rsi, {token["arguments"][0]}\n"
+                    f"lea rsi, {token.arguments[0]}\n"
                     "xor rax, rax\n"
                     "call scanf\n")
 
             case "print":
                 self.add_assembly_code(
-                    f"mov rdi, {token["arguments"][0]}\n"
+                    f"mov rdi, {token.arguments[0]}\n"
                     "xor rax, rax\n"
                     "call printf\n")
 
             case "return":
-                if len(token["arguments"]) == 1:
-                    self.add_assembly_code(f"mov rax, {token["arguments"][0]}\n")
+                if len(token.arguments) == 1:
+                    self.add_assembly_code(f"mov rax, {token.arguments[0]}\n")
                 self.add_assembly_code("jmp .end\n")
 
             case "IF":
                 self.add_assembly_code(
-                    f"mov r8, {token["arguments"][0]}\n"
-                    f"mov r9, {token["arguments"][2]}\n"
+                    f"mov r8, {token.arguments[0]}\n"
+                    f"mov r9, {token.arguments[2]}\n"
                     "cmp r8, r9\n"
-                    f"j{self.comparison_jumps[token["arguments"][1]]} .else_{token["arguments"][3]}\n")
+                    f"j{self.comparison_jumps[token.arguments[1]]} .else_{token.arguments[3]}\n")
 
             case "ELSE":
                 self.add_assembly_code(
-                    f"jmp .endif_{token["arguments"][0]}\n"
-                    f".else_{token["arguments"][0]}:\n")
+                    f"jmp .endif_{token.arguments[0]}\n"
+                    f".else_{token.arguments[0]}:\n")
 
             case "ENDIF":
-                if len(token["arguments"]) == 2 and token["arguments"][1] == "no else":
-                    self.add_assembly_code(f".else_{token["arguments"][0]}:\n")
+                if len(token.arguments) == 2 and token.arguments[1] == "no else":
+                    self.add_assembly_code(f".else_{token.arguments[0]}:\n")
                 else:
-                    self.add_assembly_code(f".endif_{token["arguments"][0]}:\n")
+                    self.add_assembly_code(f".endif_{token.arguments[0]}:\n")
 
             case "LOOP":
-                self.add_assembly_code(f".loop_{token["arguments"][0]}:\n")
+                self.add_assembly_code(f".loop_{token.arguments[0]}:\n")
 
             case "break":
-                self.add_assembly_code(f"jmp .endloop_{token["arguments"][0]}\n")
+                self.add_assembly_code(f"jmp .endloop_{token.arguments[0]}\n")
 
             case "ENDLOOP":
                 self.add_assembly_code(
-                    f"jmp .loop_{token["arguments"][0]}\n"
-                    f".endloop_{token["arguments"][0]}:\n")
+                    f"jmp .loop_{token.arguments[0]}\n"
+                    f".endloop_{token.arguments[0]}:\n")
 
             case "name_parameter":
-                self.add_assembly_code(f"%define {token["arguments"][0]} parameter_{token["arguments"][1]}\n")
+                self.add_assembly_code(f"%define {token.arguments[0]} parameter_{token.arguments[1]}\n")
 
             case _:
-                for k in range(len(token["arguments"])):
-                    self.add_assembly_code(f"mov {self.arguments_registers[k]}, {token["arguments"][k]}\n")
-                self.add_assembly_code(f"call {token['name']}\n")
+                for k in range(len(token.arguments)):
+                    self.add_assembly_code(f"mov {self.arguments_registers[k]}, {token.arguments[k]}\n")
+                self.add_assembly_code(f"call {token.line}\n")
 
     def add_assembly_code(self, code):
         self.assembly_code += code
@@ -198,5 +198,5 @@ class Compiler:
             file.write(self.assembly_code)
 
     def build_executable(self):
-        subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", self.output_file, "-o", "program.o"], check=True)
-        subprocess.run(["gcc", "-no-pie", "program.o", "-o", "program", "-lc"], check=True)
+        subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", self.output_file, "-o", "parsed_program.o"], check=True)
+        subprocess.run(["gcc", "-no-pie", "parsed_program.o", "-o", "parsed_program", "-lc"], check=True)

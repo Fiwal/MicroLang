@@ -14,12 +14,12 @@ def main():
 
     parser = Parser(tokens)
     try:
-        ast = parser.parse()
+        parsed_program = parser.parse()
     except Error as e:
         print(f"\033[1;31mError: {e}\033[0m")
         return
 
-    compiler = Compiler(ast)
+    compiler = Compiler(parsed_program)
     compiler.compile()
 
 if __name__ == "__main__":
