@@ -198,5 +198,5 @@ class Compiler:
             file.write(self.assembly_code)
 
     def build_executable(self):
-        subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", self.output_file, "-o", "parsed_program.o"], check=True)
-        subprocess.run(["gcc", "-no-pie", "parsed_program.o", "-o", "parsed_program", "-lc"], check=True)
+        subprocess.run(["nasm", "-f", "elf64", "-g", "-F", "dwarf", self.output_file, "-o", "program.o"], check=True)
+        subprocess.run(["gcc", "-no-pie", "program.o", "-o", "program", "-lc"], check=True)
