@@ -1,4 +1,5 @@
 from src.exceptions import Error
+from src.structures.token import Token
 from src.utils.stack import Stack
 from src.utils.name_validator import is_valid_name
 from src.utils.name_resolver import check_name_type as check_name
@@ -24,7 +25,7 @@ class Function:
             match token.name:
                 case "int":
                     if not len(token.arguments) in [1, 2]:
-                        raise Error(f"Wrong number of arguments for int: expected 1 or 2, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for int: expected 1 or 2, got {len(token.arguments)} - line {token.line}")
 
                     if not is_valid_name(token.arguments[0]):
                         raise Error(f"Wrong variable name '{token.arguments[0]}' - line {token.line}")
@@ -40,17 +41,17 @@ class Function:
 
                 case "set" | "add" | "sub" | "mul"| "div" | "mod":
                     if len(token.arguments) != 2:
-                        raise Error(f"Wrong number of arguments for {token.line}: expected 2, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for {token.name}: expected 2, got {len(token.arguments)} - line {token.line}")
 
                     if not check_name(token.arguments[0], parsed_program, self) in [NameType.INT_VARIABLE, NameType.PARAMETER]:
-                        raise Error(f"Wrong first argument for {token.line} '{token.line[0]}' - line {token.line}")
+                        raise Error(f"Wrong first argument for {token.name} '{token.arguments[0]}' - line {token.line}")
 
                     if not check_name(token.arguments[1], parsed_program, self) in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
                         raise Error(f"Wrong argument '{token.arguments[1]}' - line {token.line}")
 
                 case "print_int" | "input_int":
                     if not len(token.arguments) == 1:
-                        raise Error(f"Wrong number of arguments for {token.line}: expected 1, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for {token.name}: expected 1, got {len(token.arguments)} - line {token.line}")
 
                     name_type = check_name(token.arguments[0], parsed_program, self)
 
@@ -62,21 +63,21 @@ class Function:
 
                 case "print":
                     if not len(token.arguments) == 1:
-                        raise Error(f"Wrong number of arguments for print: expected 1, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for print: expected 1, got {len(token.arguments)} - line {token.line}")
 
                     if not check_name(token.arguments[0], parsed_program, self) == NameType.STRING_VARIABLE:
                         raise Error(f"Wrong argument for print '{token.arguments[0]}', it must be a string variable - line {token.line}")
 
                 case "return":
                     if not len(token.arguments) in [0, 1]:
-                        raise Error(f"Wrong number of arguments for return: expected 0 or 1, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for return: expected 0 or 1, got {len(token.arguments)} - line {token.line}")
 
                     if not len(token.arguments) == 0 and not check_name(token.arguments[0], parsed_program, self) in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
                         raise Error(f"Wrong argument '{token.arguments[0]}' - line {token.line}")
 
                 case "IF":
                     if not len(token.arguments) == 3:
-                        raise Error(f"Wrong number of arguments for IF: expected 3, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for IF: expected 3, got {len(token.arguments)} - line {token.line}")
 
                     if not check_name(token.arguments[0], parsed_program, self) in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
                         raise Error(f"Wrong first argument for IF '{token.arguments[0]}' - line {token.line}")
@@ -95,9 +96,9 @@ class Function:
 
                 case "ELSE":
                     if not len(token.arguments) == 0:
-                        raise Error(f"Wrong number of arguments for ELSE: expected 0, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for ELSE: expected 0, got {len(token.arguments)} - line {token.line}")
 
-                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.top() == "loop":
+                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.peek() == "loop":
                         raise Error(f"ELSE without matching IF - line {token.line}")
 
                     current_if = self.if_stack.pop()
@@ -110,9 +111,9 @@ class Function:
 
                 case "ENDIF":
                     if not len(token.arguments) == 0:
-                        raise Error(f"Wrong number of arguments for ENDIF: expected 0, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for ENDIF: expected 0, got {len(token.arguments)} - line {token.line}")
 
-                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.top() == "loop":
+                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.peek() == "loop":
                         raise Error(f"ENDIF without matching IF - line {token.line}")
 
                     current_if = self.if_stack.pop()
@@ -124,7 +125,7 @@ class Function:
 
                 case "LOOP":
                     if not len(token.arguments) == 0:
-                        raise Error(f"Wrong number of arguments for LOOP: expected 0, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for LOOP: expected 0, got {len(token.arguments)} - line {token.line}")
 
                     self.loop_stack.push({"id": self.loop_counter})
                     token.arguments.append(self.loop_counter)
@@ -134,19 +135,19 @@ class Function:
 
                 case "break":
                     if not len(token.arguments) == 0:
-                        raise Error(f"Wrong number of arguments for break: expected 0, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for break: expected 0, got {len(token.arguments)} - line {token.line}")
 
                     if self.loop_stack.is_empty():
                         raise Error(f"break outside of LOOP - line {token.line}")
 
-                    current_loop = self.loop_stack.top()
+                    current_loop = self.loop_stack.peek()
                     token.arguments.append(current_loop["id"])
 
                 case "ENDLOOP":
                     if not len(token.arguments) == 0:
-                        raise Error(f"Wrong number of arguments for ENDLOOP: expected 0, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for ENDLOOP: expected 0, got {len(token.arguments)} - line {token.line}")
 
-                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.top() == "if":
+                    if self.if_and_loop_stack.is_empty() or self.if_and_loop_stack.peek() == "if":
                         raise Error(f"ENDLOOP without matching LOOP - line {token.line}")
 
                     current_loop = self.loop_stack.pop()
@@ -155,7 +156,7 @@ class Function:
 
                 case "name_parameter":
                     if len(token.arguments) != 2:
-                        raise Error(f"Wrong number of arguments for name_parameter: expected 2, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for name_parameter: expected 2, got {len(token.arguments)} - line {token.line}")
                     
                     if not is_valid_name(token.arguments[0]):
                         raise Error(f"Wrong parameter name '{token.arguments[0]}' - line {token.line}")
@@ -176,12 +177,14 @@ class Function:
                     if not check_name(token.name, parsed_program, self) == NameType.FUNCTION:
                         raise Error(f"Function '{token.name}' not found - line {token.line}")
 
+                    expected_num_of_arguments = 0
                     for function in parsed_program["functions"]:
                         if function.name == token.name:
                             expected_num_of_arguments = function.parameter_count
 
+
                     if len(token.arguments) != expected_num_of_arguments:
-                        raise Error(f"Wrong number of arguments for {token.name}: expected {expected_num_of_arguments}, got {len(token.line)} - line {token.line}")
+                        raise Error(f"Wrong number of arguments for {token.name}: expected {expected_num_of_arguments}, got {len(token.arguments)} - line {token.line}")
 
                     for argument in token.arguments:
                         if check_name(argument, parsed_program, self) not in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:

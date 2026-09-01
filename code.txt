@@ -1,11 +1,11 @@
 string: num_prompt_1, "enter a: ";
 string: num_prompt_2, "enter b: ";
-string: operation_type_prompt, "1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the leparsed_program common multiple (LCM)\nenter your choice: ";
+string: operation_type_prompt, "1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the least common multiple (LCM)\nenter your choice: ";
 string: result_prompt, "result: ";
 string: exit_prompt, "do you want to exit? (1-NO/2-yes): ";
 string: invalid_operation_error_prompt, "invalid operation type\n";
 string: divide_by_zero_error_prompt, "cannot divide by zero\n";
-string: power_error_prompt, "parsed_program cannot raise to a negative power\n";
+string: power_error_prompt, "program cannot raise to a negative power\n";
 string: invalid_choice_prompt, "invalid choice\n";
 string: gcd_error_prompt, "GCD(0, 0) is undefined\n";
 string: new_line, "\n";

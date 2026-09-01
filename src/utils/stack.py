@@ -11,7 +11,7 @@ class Stack:
         else:
             raise IndexError("pop from empty stack")
 
-    def top(self):
+    def peek(self):
         if not self.is_empty():
             return self.stack[-1]
         else:

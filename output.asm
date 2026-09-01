@@ -2,12 +2,12 @@ section .data
 fmt_int? db "%lld", 0
 num_prompt_1 db `enter a: `, 0
 num_prompt_2 db `enter b: `, 0
-operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the leparsed_program common multiple (LCM)\nenter your choice: `, 0
+operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the least common multiple (LCM)\nenter your choice: `, 0
 result_prompt db `result: `, 0
 exit_prompt db `do you want to exit? (1-NO/2-yes): `, 0
 invalid_operation_error_prompt db `invalid operation type\n`, 0
 divide_by_zero_error_prompt db `cannot divide by zero\n`, 0
-power_error_prompt db `parsed_program cannot raise to a negative power\n`, 0
+power_error_prompt db `program cannot raise to a negative power\n`, 0
 invalid_choice_prompt db `invalid choice\n`, 0
 gcd_error_prompt db `GCD(0, 0) is undefined\n`, 0
 new_line db `\n`, 0
@@ -126,7 +126,7 @@ idiv r11
 mov a, rdx
 mov rdi, b
 mov rsi, a
-call 53
+call Euclidean_algorithm
 mov rax, return_value
 jmp .end
 .else_0:
@@ -151,11 +151,11 @@ mov parameter_1, rsi
 %define a parameter_0
 %define b parameter_1
 mov rdi, a
-call 64
+call absolute_value
 mov rax, return_value
 mov a, rax
 mov rdi, b
-call 67
+call absolute_value
 mov rax, return_value
 mov b, rax
 mov r8, a
@@ -174,7 +174,7 @@ jmp .end
 .else_1:
 mov rdi, a
 mov rsi, b
-call 78
+call Euclidean_algorithm
 mov rax, return_value
 jmp .end
 .end:
@@ -196,11 +196,11 @@ mov parameter_1, rsi
 %define a parameter_0
 %define b parameter_1
 mov rdi, a
-call 86
+call absolute_value
 mov rax, return_value
 mov a, rax
 mov rdi, b
-call 89
+call absolute_value
 mov rax, return_value
 mov b, rax
 %define c [rbp-24]
@@ -218,7 +218,7 @@ jmp .end
 .else_0:
 mov rdi, a
 mov rsi, b
-call 98
+call Euclidean_algorithm
 mov r11, return_value
 mov rax, c
 cqo
@@ -270,7 +270,7 @@ jne .else_0
 mov rax, b
 add a, rax
 mov rdi, a
-call 118
+call print_result
 jmp .end
 .else_0:
 mov r8, operation_type
@@ -280,7 +280,7 @@ jne .else_1
 mov rax, b
 sub a, rax
 mov rdi, a
-call 124
+call print_result
 jmp .end
 .else_1:
 mov r8, operation_type
@@ -291,7 +291,7 @@ mov rax, a
 imul rax, b
 mov a, rax
 mov rdi, a
-call 130
+call print_result
 jmp .end
 .else_2:
 mov r8, operation_type
@@ -308,7 +308,7 @@ cqo
 idiv r11
 mov a, rax
 mov rdi, a
-call 137
+call print_result
 jmp .end
 jmp .endif_4
 .else_4:
@@ -332,7 +332,7 @@ cqo
 idiv r11
 mov a, rdx
 mov rdi, a
-call 148
+call print_result
 jmp .end
 jmp .endif_6
 .else_6:
@@ -352,11 +352,11 @@ cmp r8, r9
 jl .else_8
 mov rdi, a
 mov rsi, b
-call 158
+call power
 mov rax, return_value
 mov a, rax
 mov rdi, a
-call 160
+call print_result
 jmp .end
 jmp .endif_8
 .else_8:
@@ -386,7 +386,7 @@ jmp .end
 .else_10:
 mov rdi, a
 mov rsi, b
-call 176
+call GCD
 mov rdi, fmt_int?
 mov rsi, return_value
 xor rax, rax
@@ -399,11 +399,11 @@ cmp r8, r9
 jne .else_12
 mov rdi, a
 mov rsi, b
-call 182
+call LCM
 mov rax, return_value
 mov a, rax
 mov rdi, a
-call 184
+call print_result
 jmp .end
 .else_12:
 mov rdi, invalid_operation_error_prompt
@@ -422,7 +422,7 @@ mov rbp, rsp
 sub rsp, 16
 %define exit_choice [rbp-8]
 .loop_0:
-call 195
+call calculator
 .loop_1:
 mov rdi, exit_prompt
 xor rax, rax

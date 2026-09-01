@@ -17,7 +17,7 @@ class IntStatement(BaseStatement):
 
     def check_for_error(self):
         if not len(self.arguments) in [1, 2]:
-            raise Error(f"Wrong number of arguments for int: expected 1 or 2, got {len(self.line)} - line {self.line}")
+            raise Error(f"Wrong number of arguments for int: expected 1 or 2, got {len(self.arguments)} - line {self.line}")
 
         if not is_valid_name(self.arguments[0]):
             raise Error(f"Wrong variable name '{self.arguments[0]}' - line {self.line}")
@@ -36,4 +36,3 @@ class IntStatement(BaseStatement):
                 f"%define {self.arguments[0]} [rbp-{(self.serial_number_of_variable + self.function.parameter_count) * 8}]\n"
                 f"mov rax, {self.arguments[1]}\n"
                 f"mov {self.arguments[0]}, rax\n")
-
