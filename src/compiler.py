@@ -26,4 +26,3 @@ class Compiler:
         except Error as e:
             print(f"\033[1;31mError: {e}\033[0m")
             return
-
