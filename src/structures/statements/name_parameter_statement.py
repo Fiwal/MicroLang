@@ -1,5 +1,3 @@
-#TODO
-
 from src.exceptions.error import Error
 from src.utils.name_validator import is_valid_name
 from src.utils.name_resolver import check_name_type as check_name
@@ -24,5 +22,6 @@ class NameParameterStatement(BaseStatement):
             raise Error(f"Wrong second argument for name_parameter '{self.arguments[1]}', it must be an integer - line {self.line}")
         if self.arguments[1] < 0 or self.arguments[1] >= self.function.parameter_count or self.arguments[1] in self.function.parameters_with_names:
             raise Error(f"Wrong second argument for name_parameter '{self.arguments[1]}' - line {self.line}")
+
     def generate_nasm_code(self):
         return f"%define {self.arguments[0]} parameter_{self.arguments[1]}\n"

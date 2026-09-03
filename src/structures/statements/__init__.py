@@ -14,6 +14,6 @@ from .else_statement import ElseStatement
 from .endif_statement import EndifStatement
 from .loop_statement import LoopStatement
 from .break_statement import BreakStatement
-from .endloop_statement import EndLoopStatement
+from .endloop_statement import EndloopStatement
 from .name_parameter_statement import NameParameterStatement
 from .function_call_statement import FunctionCallStatement

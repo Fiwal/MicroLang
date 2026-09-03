@@ -1,7 +1,7 @@
-from src.lexer import Lexer
-from src.parser import Parser
-from src.code_generator import CodeGenerator
-from src.builder import Builder
+from src.pipeline.lexer import Lexer
+from src.pipeline.parser import Parser
+from src.pipeline.code_generator import CodeGenerator
+from src.pipeline.builder import Builder
 from src.exceptions.error import Error
 
 class Compiler:
@@ -13,13 +13,10 @@ class Compiler:
         try:
             lexer = Lexer(self.input_file)
             tokens = lexer.tokenize()
-
             parser = Parser(tokens)
             parsed_program = parser.parse()
-
             nasm_code_generator = CodeGenerator(parsed_program, "output.asm")
             nasm_code_generator.generate_nasm_code()
-
             builder = Builder("output.asm", self.output_file)
             builder.build_executable()
 

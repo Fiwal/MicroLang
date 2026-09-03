@@ -24,4 +24,5 @@ class ElseStatement(BaseStatement):
             raise Error(f"Duplicate ELSE for the same IF - line {self.line}")
 
     def generate_nasm_code(self):
-        return f"jmp .endif_{self.serial_number_of_if}\n.else_{self.serial_number_of_if}:\n"
+        return (f"jmp .endif_{self.serial_number_of_if}\n"
+                f".else_{self.serial_number_of_if}:\n")

@@ -8,7 +8,7 @@ def check_name_type(name, parsed_program, current_function = None):
         if function.name == name:
             return NameType.FUNCTION
 
-    if current_function != None:
+    if current_function is not None:
         for var in current_function.local_variables:
             if var == name:
                 return NameType.INT_VARIABLE
