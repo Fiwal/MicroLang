@@ -2,8 +2,8 @@ from src.utils.decorators import measure_time
 
 
 class CodeGenerator:
-    def __init__(self, parsed_program, output_file):
-        self.parsed_program = parsed_program
+    def __init__(self, program, output_file):
+        self.program = program
         self.nasm_code = ""
         self.arguments_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
         self.comparison_jumps = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}
@@ -21,7 +21,7 @@ class CodeGenerator:
 
         self.add_assembly_code("fmt_int? db \"%lld\", 0\n")
 
-        for var in self.parsed_program["initialized_global_variables"]:
+        for var in self.program["initialized_global_variables"]:
             if var["type"] == "int":
                 self.add_assembly_code(
                     f"{var["name"]}? dq {var["value"]}\n"
@@ -32,7 +32,7 @@ class CodeGenerator:
     def section_bss(self):
         self.add_assembly_code("section .bss\n")
 
-        for var in self.parsed_program["uninitialized_global_variables"]:
+        for var in self.program["uninitialized_global_variables"]:
             if var["type"] == "int":
                 self.add_assembly_code(
                     f"{var["name"]}? resq 1\n"
@@ -46,7 +46,7 @@ class CodeGenerator:
             "extern scanf\n"
             "%define return_value rax\n")
 
-        for function in self.parsed_program["functions"]:
+        for function in self.program["functions"]:
             self.add_assembly_code(
                 f"{function.name}:\n"
                 "push rbp\n"

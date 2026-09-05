@@ -3,8 +3,8 @@ from src.structures.statements.base_statement import BaseStatement
 
 
 class EndloopStatement(BaseStatement):
-    def __init__(self, token, parsed_program, function):
-        super().__init__(token, parsed_program, function)
+    def __init__(self, token, program, function):
+        super().__init__(token, program, function)
         self.serial_number_of_loop = None
 
     def parse(self):

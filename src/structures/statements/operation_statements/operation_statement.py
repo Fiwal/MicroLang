@@ -4,15 +4,15 @@ from src.enums.name_type import NameType
 from src.structures.statements.base_statement import BaseStatement
 
 class OperationStatement(BaseStatement):
-    def __init__(self, token, parsed_program, function):
-        super().__init__(token, parsed_program, function)
+    def __init__(self, token, program, function):
+        super().__init__(token, program, function)
         self.operation_name = token.name
 
     def parse(self):
         if len(self.arguments) != 2:
             raise Error(
                 f"Wrong number of arguments for {self.operation_name}: expected 2, got {len(self.arguments)} - line {self.line}")
-        if not check_name(self.arguments[0], self.parsed_program, self.function) in [NameType.INT_VARIABLE, NameType.PARAMETER]:
+        if not check_name(self.arguments[0], self.program, self.function) in [NameType.INT_VARIABLE, NameType.PARAMETER]:
             raise Error(f"Wrong first argument for {self.operation_name} '{self.arguments[0]}' - line {self.line}")
-        if not check_name(self.arguments[1], self.parsed_program, self.function) in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
+        if not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
             raise Error(f"Wrong argument '{self.arguments[1]}' - line {self.line}")

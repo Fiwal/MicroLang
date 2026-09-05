@@ -25,10 +25,10 @@ class Function:
         self.if_and_loop_stack = Stack()
         self.statements_list = []
 
-    def parse_function(self, parsed_program):
+    def parse_function(self, program):
         for token in self.tokens:
             if token.name in self.statements:
-                self.statements_list.append(self.statements[token.name](token, parsed_program, self))
+                self.statements_list.append(self.statements[token.name](token, program, self))
             else:
-                self.statements_list.append(FunctionCallStatement(token, parsed_program, self))
+                self.statements_list.append(FunctionCallStatement(token, program, self))
             self.statements_list[-1].parse()
