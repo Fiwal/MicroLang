@@ -18,10 +18,12 @@ class CodeGenerator:
         self.save_assembly()
 
     def section_data(self):
-        self.add_assembly_code("section .data\n")
+        self.add_assembly_code(
+            "section .data\n"
+            "fmt_int? db \"%lld\", 0\n")
+        self.add_initialized_global_variables()
 
-        self.add_assembly_code("fmt_int? db \"%lld\", 0\n")
-
+    def add_initialized_global_variables(self):
         for var in self.program.initialized_global_variables:
             if var.type == VarType.INTEGER:
                 self.add_assembly_code(
@@ -32,7 +34,9 @@ class CodeGenerator:
 
     def section_bss(self):
         self.add_assembly_code("section .bss\n")
+        self.add_uninitialized_global_variables()
 
+    def add_uninitialized_global_variables(self):
         for var in self.program.uninitialized_global_variables:
             if var.type == VarType.INTEGER:
                 self.add_assembly_code(
@@ -46,38 +50,37 @@ class CodeGenerator:
             "extern printf\n"
             "extern scanf\n"
             "%define return_value rax\n")
-
         for function in self.program.functions:
-            self.add_assembly_code(
-                f"{function.name}:\n"
-                "push rbp\n"
-                "mov rbp, rsp\n")
+            self.add_function(function)
 
-            if ((len(function.local_variables) + function.parameter_count) * 8) % 16 == 0:
-                self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8}\n")
-            else:
-                self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8 + 8}\n")
+    def add_function(self, function):
+        self.start_function(function)
+        for statement in function.statements_list:
+            self.add_assembly_code(statement.generate_nasm_code())
+        self.end_function(function)
 
-            for i in range(function.parameter_count):
-                self.add_assembly_code(f"%define parameter_{i} [rbp-{(i+1)*8}]\n")
-                self.add_assembly_code(f"mov parameter_{i}, {self.arguments_registers[i]}\n")
+    def start_function(self, function):
+        self.add_assembly_code(
+            f"{function.name}:\n"
+            "push rbp\n"
+            "mov rbp, rsp\n")
+        if ((len(function.local_variables) + function.parameter_count) * 8) % 16 == 0:
+            self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8}\n")
+        else:
+            self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8 + 8}\n")
+        for i in range(function.parameter_count):
+            self.add_assembly_code(f"%define parameter_{i} [rbp-{(i + 1) * 8}]\n")
+            self.add_assembly_code(f"mov parameter_{i}, {self.arguments_registers[i]}\n")
 
-            for statement in function.statements_list:
-                self.add_assembly_code(statement.generate_nasm_code())
-
-            self.add_assembly_code(".end:\n")
-
-            for i in range(function.parameter_count):
-                self.add_assembly_code(f"%undef parameter_{i}\n")
-
-            for local_var in function.local_variables:
-                self.add_assembly_code(f"%undef {local_var}\n")
-
-            for parameter_name in function.parameters:
-                self.add_assembly_code(f"%undef {parameter_name}\n")
-
-            self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
-
+    def end_function(self, function):
+        self.add_assembly_code(".end:\n")
+        for i in range(function.parameter_count):
+            self.add_assembly_code(f"%undef parameter_{i}\n")
+        for local_var in function.local_variables:
+            self.add_assembly_code(f"%undef {local_var}\n")
+        for parameter_name in function.parameters:
+            self.add_assembly_code(f"%undef {parameter_name}\n")
+        self.add_assembly_code("mov rsp, rbp\npop rbp\nret\n")
 
     def add_assembly_code(self, code):
         self.nasm_code += code

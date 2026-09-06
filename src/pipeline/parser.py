@@ -11,6 +11,7 @@ class Parser:
         self.tokens = given_tokens
         self.program = ProgramStruct()
         self.in_function_body = False
+        self.is_main_function = False
 
     @measure_time("Parsing...")
     def parse(self):
@@ -18,6 +19,8 @@ class Parser:
             self.process_token(token)
         if self.in_function_body:
             raise Error(f"Unclosed function '{self.get_current_function().name}'")
+        if not self.is_main_function:
+            raise Error(f"No function 'main' in code")
         self.parse_functions()
         return self.program
 
@@ -44,6 +47,8 @@ class Parser:
             raise Error(f"Parameter count must be an integer - line {token.line}")
         if token.arguments[1] < 0 or token.arguments[1] > 6:
             raise Error(f"Parameter count must be between 0 and 6 (inclusive) - line {token.line}")
+        if token.arguments[0] == "main":
+            self.is_main_function = True
         self.program.functions.append(Function(token.arguments[0], token.arguments[1]))
         self.in_function_body = True
 
