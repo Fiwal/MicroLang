@@ -1,5 +1,5 @@
 from src.exceptions import Error
-from src.utils.decorators import measure_time
+from src.utils import measure_time
 from src.structures.token import Token
 
 

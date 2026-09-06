@@ -1,10 +1,10 @@
-from src.enums.name_type import NameType
+from src.enums import NameType, VarType
 
 def check_name_type(name, program, current_function = None):
     if isinstance(name, int):
         return NameType.INT_NUM
     
-    for function in program["functions"]:
+    for function in program.functions:
         if function.name == name:
             return NameType.FUNCTION
 
@@ -17,11 +17,11 @@ def check_name_type(name, program, current_function = None):
             if parameter == name:
                 return NameType.PARAMETER
             
-    for var in (program["uninitialized_global_variables"] + program["initialized_global_variables"]):
-        if var["name"] == name:
-            if var["type"] == "int":
+    for var in (program.uninitialized_global_variables + program.initialized_global_variables):
+        if var.name == name:
+            if var.type == VarType.INTEGER:
                 return NameType.INT_VARIABLE
-            if var["type"] == "string":
+            if var.type == VarType.STRING:
                 return NameType.STRING_VARIABLE
 
     for i in range(0, 6):

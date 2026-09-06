@@ -1,4 +1,5 @@
-from src.utils.decorators import measure_time
+from src.utils import measure_time
+from src.enums import VarType
 
 
 class CodeGenerator:
@@ -21,22 +22,22 @@ class CodeGenerator:
 
         self.add_assembly_code("fmt_int? db \"%lld\", 0\n")
 
-        for var in self.program["initialized_global_variables"]:
-            if var["type"] == "int":
+        for var in self.program.initialized_global_variables:
+            if var.type == VarType.INTEGER:
                 self.add_assembly_code(
-                    f"{var["name"]}? dq {var["value"]}\n"
-                    f"%define {var["name"]} [{var["name"]}?]\n")
-            if var["type"] == "string":
-                self.add_assembly_code(f"{var["name"]} db {var["value"]}, 0\n")
+                    f"{var.name}? dq {var.value}\n"
+                    f"%define {var.name} [{var.name}?]\n")
+            if var.type == VarType.STRING:
+                self.add_assembly_code(f"{var.name} db {var.value}, 0\n")
 
     def section_bss(self):
         self.add_assembly_code("section .bss\n")
 
-        for var in self.program["uninitialized_global_variables"]:
-            if var["type"] == "int":
+        for var in self.program.uninitialized_global_variables:
+            if var.type == VarType.INTEGER:
                 self.add_assembly_code(
-                    f"{var["name"]}? resq 1\n"
-                    f"%define {var["name"]} [{var["name"]}?]\n")
+                    f"{var.name}? resq 1\n"
+                    f"%define {var.name} [{var.name}?]\n")
 
     def section_text(self):
         self.add_assembly_code(
@@ -46,7 +47,7 @@ class CodeGenerator:
             "extern scanf\n"
             "%define return_value rax\n")
 
-        for function in self.program["functions"]:
+        for function in self.program.functions:
             self.add_assembly_code(
                 f"{function.name}:\n"
                 "push rbp\n"

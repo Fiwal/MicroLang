@@ -1,5 +1,6 @@
 import subprocess
-from src.utils.decorators import measure_time
+from src.utils import measure_time
+
 
 class Builder:
     def __init__(self, nasm_code, output_file):

@@ -1,4 +1,4 @@
-from src.exceptions.error import Error
+from src.exceptions import Error
 from src.structures.statements.base_statement import BaseStatement
 
 

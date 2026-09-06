@@ -1,6 +1,6 @@
-from src.exceptions.error import Error
-from src.enums.name_type import NameType
-from src.utils.name_resolver import check_name_type as check_name
+from src.exceptions import Error
+from src.enums import NameType
+from src.utils import check_name_type as check_name
 from src.structures.statements.base_statement import BaseStatement
 
 

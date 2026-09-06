@@ -1,4 +1,4 @@
-from src.utils.stack import Stack
+from src.utils import Stack
 from src.structures.statements import *
 
 

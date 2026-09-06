@@ -2,7 +2,8 @@ from src.pipeline.lexer import Lexer
 from src.pipeline.parser import Parser
 from src.pipeline.code_generator import CodeGenerator
 from src.pipeline.builder import Builder
-from src.exceptions.error import Error
+from src.exceptions import Error
+
 
 class Compiler:
     def __init__(self, input_file, output_file):
@@ -11,15 +12,10 @@ class Compiler:
 
     def compile(self):
         try:
-            lexer = Lexer(self.input_file)
-            tokens = lexer.tokenize()
-            parser = Parser(tokens)
-            program = parser.parse()
-            nasm_code_generator = CodeGenerator(program, "output.asm")
-            nasm_code_generator.generate_nasm_code()
-            builder = Builder("output.asm", self.output_file)
-            builder.build_executable()
-
+            tokens = Lexer(self.input_file).tokenize()
+            parsed_program = Parser(tokens).parse()
+            CodeGenerator(parsed_program, "output.asm").generate_nasm_code()
+            Builder("output.asm", self.output_file).build_executable()
         except Error as e:
             print(f"\033[1;31mError: {e}\033[0m")
             return

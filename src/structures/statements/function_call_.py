@@ -1,6 +1,6 @@
-from src.exceptions.error import Error
-from src.enums.name_type import NameType
-from src.utils.name_resolver import check_name_type as check_name
+from src.exceptions import Error
+from src.enums import NameType
+from src.utils import check_name_type as check_name
 from src.structures.statements.base_statement import BaseStatement
 
 
@@ -18,7 +18,7 @@ class FunctionCallStatement(BaseStatement):
         if not check_name(self.name, self.program, self.function) == NameType.FUNCTION:
             raise Error(f"Function '{self.name}' not found - line {self.line}")
         expected_num_of_arguments = 0
-        for function in self.program["functions"]:
+        for function in self.program.functions:
             if function.name == self.name:
                 expected_num_of_arguments = function.parameter_count
         if len(self.arguments) != expected_num_of_arguments:
