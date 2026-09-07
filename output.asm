@@ -1,5 +1,6 @@
 section .data
 fmt_int? db "%lld", 0
+fmt_str? db "%s", 0
 num_prompt_1 db `enter a: `, 0
 num_prompt_2 db `enter b: `, 0
 operation_type_prompt db `1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the least common multiple (LCM)\nenter your choice: `, 0
@@ -23,14 +24,16 @@ mov rbp, rsp
 sub rsp, 16
 %define parameter_0 [rbp-8]
 mov parameter_0, rdi
-mov rdi, result_prompt
+mov rdi, fmt_str?
+mov rsi, result_prompt
 xor rax, rax
 call printf
 mov rdi, fmt_int?
 mov rsi, parameter_0
 xor rax, rax
 call printf
-mov rdi, new_line
+mov rdi, fmt_str?
+mov rsi, new_line
 xor rax, rax
 call printf
 .end:
@@ -242,21 +245,24 @@ sub rsp, 32
 %define a [rbp-8]
 %define b [rbp-16]
 %define operation_type [rbp-24]
-mov rdi, num_prompt_1
+mov rdi, fmt_str?
+mov rsi, num_prompt_1
 xor rax, rax
 call printf
 mov rdi, fmt_int?
 lea rsi, a
 xor rax, rax
 call scanf
-mov rdi, num_prompt_2
+mov rdi, fmt_str?
+mov rsi, num_prompt_2
 xor rax, rax
 call printf
 mov rdi, fmt_int?
 lea rsi, b
 xor rax, rax
 call scanf
-mov rdi, operation_type_prompt
+mov rdi, fmt_str?
+mov rsi, operation_type_prompt
 xor rax, rax
 call printf
 mov rdi, fmt_int?
@@ -312,7 +318,8 @@ call print_result
 jmp .end
 jmp .endif_4
 .else_4:
-mov rdi, divide_by_zero_error_prompt
+mov rdi, fmt_str?
+mov rsi, divide_by_zero_error_prompt
 xor rax, rax
 call printf
 jmp .end
@@ -336,7 +343,8 @@ call print_result
 jmp .end
 jmp .endif_6
 .else_6:
-mov rdi, divide_by_zero_error_prompt
+mov rdi, fmt_str?
+mov rsi, divide_by_zero_error_prompt
 xor rax, rax
 call printf
 jmp .end
@@ -360,7 +368,8 @@ call print_result
 jmp .end
 jmp .endif_8
 .else_8:
-mov rdi, power_error_prompt
+mov rdi, fmt_str?
+mov rsi, power_error_prompt
 xor rax, rax
 call printf
 jmp .end
@@ -378,7 +387,8 @@ mov r8, b
 mov r9, 0
 cmp r8, r9
 jne .else_11
-mov rdi, gcd_error_prompt
+mov rdi, fmt_str?
+mov rsi, gcd_error_prompt
 xor rax, rax
 call printf
 jmp .end
@@ -406,7 +416,8 @@ mov rdi, a
 call print_result
 jmp .end
 .else_12:
-mov rdi, invalid_operation_error_prompt
+mov rdi, fmt_str?
+mov rsi, invalid_operation_error_prompt
 xor rax, rax
 call printf
 .end:
@@ -424,7 +435,8 @@ sub rsp, 16
 .loop_0:
 call calculator
 .loop_1:
-mov rdi, exit_prompt
+mov rdi, fmt_str?
+mov rsi, exit_prompt
 xor rax, rax
 call printf
 mov rdi, fmt_int?
@@ -443,7 +455,8 @@ mov r8, exit_choice
 mov r9, 1
 cmp r8, r9
 je .else_1
-mov rdi, invalid_choice_prompt
+mov rdi, fmt_str?
+mov rsi, invalid_choice_prompt
 xor rax, rax
 call printf
 jmp .endif_1

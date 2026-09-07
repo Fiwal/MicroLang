@@ -5,8 +5,8 @@ from src.structures.statements import *
 class Function:
     statements = {"int": IntStatement, "set": SetStatement, "add": AddStatement,
       "sub": SubStatement, "mul": MulStatement, "div": DivStatement,
-      "mod": ModStatement, "print_int": PrintIntStatement,
-      "input_int": InputIntStatement, "print": PrintStatement,
+      "mod": ModStatement,
+      "input": InputStatement, "print": PrintStatement,
       "return": ReturnStatement, "IF": IfStatement, "ELSE": ElseStatement,
       "ENDIF": EndifStatement, "LOOP": LoopStatement, "break": BreakStatement,
       "ENDLOOP": EndloopStatement, "name_parameter": NameParameterStatement}

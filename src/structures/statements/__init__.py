@@ -5,8 +5,7 @@ from .operation_statements.mul_ import MulStatement
 from .operation_statements.div_ import DivStatement
 from .operation_statements.mod_ import ModStatement
 from .operation_statements.set_ import SetStatement
-from .print_int_ import PrintIntStatement
-from .input_int_ import InputIntStatement
+from .input_ import InputStatement
 from .print_ import PrintStatement
 from .return_ import ReturnStatement
 from .if_ import IfStatement
@@ -19,6 +18,6 @@ from .name_parameter_ import NameParameterStatement
 from .function_call_ import FunctionCallStatement
 
 __all__ = ["IntStatement", "AddStatement", "SubStatement", "MulStatement", "DivStatement", "ModStatement",
-           "SetStatement", "PrintIntStatement", "InputIntStatement", "PrintStatement", "ReturnStatement",
+           "SetStatement", "InputStatement", "PrintStatement", "ReturnStatement",
            "IfStatement", "ElseStatement", "EndifStatement", "LoopStatement", "BreakStatement", "EndloopStatement",
            "NameParameterStatement", "FunctionCallStatement"]

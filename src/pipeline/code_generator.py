@@ -20,7 +20,8 @@ class CodeGenerator:
     def section_data(self):
         self.add_assembly_code(
             "section .data\n"
-            "fmt_int? db \"%lld\", 0\n")
+            "fmt_int? db \"%lld\", 0\n"
+            "fmt_str? db \"%s\", 0\n")
         self.add_initialized_global_variables()
 
     def add_initialized_global_variables(self):

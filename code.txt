@@ -12,7 +12,7 @@ string: new_line, "\n";
 
 FN: print_result, 1;
     print: result_prompt;
-    print_int: parameter_0;
+    print: parameter_0;
     print: new_line;
 ENDFN;
 
@@ -106,12 +106,12 @@ FN: calculator, 0;
     int: operation_type;
 
     print: num_prompt_1;
-    input_int: a;
+    input: a;
     print: num_prompt_2;
-    input_int: b;
+    input: b;
 
     print: operation_type_prompt;
-    input_int: operation_type;
+    input: operation_type;
 
     IF: operation_type, ==, 1;
         add: a, b;
@@ -174,7 +174,7 @@ FN: calculator, 0;
         ENDIF;
 
         GCD: a, b;
-        print_int: return_value;
+        print: return_value;
         return;
     ENDIF;
 
@@ -196,7 +196,7 @@ FN: main, 0;
 
         LOOP;
             print: exit_prompt;
-            input_int: exit_choice;
+            input: exit_choice;
 
             IF: exit_choice, ==, 2;
                 return: 0;
