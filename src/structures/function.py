@@ -7,9 +7,9 @@ class Function:
       "sub": SubStatement, "mul": MulStatement, "div": DivStatement,
       "mod": ModStatement,
       "input": InputStatement, "print": PrintStatement,
-      "return": ReturnStatement, "IF": IfStatement, "ELSE": ElseStatement,
-      "ENDIF": EndifStatement, "LOOP": LoopStatement, "break": BreakStatement,
-      "ENDLOOP": EndloopStatement, "name_parameter": NameParameterStatement}
+      "return": ReturnStatement, "if": IfStatement, "else": ElseStatement,
+      "endif": EndifStatement, "loop": LoopStatement, "break": BreakStatement,
+      "endloop": EndloopStatement, "name_parameter": NameParameterStatement}
 
     def __init__(self, name, parameters_num):
         self.name = name
@@ -32,3 +32,11 @@ class Function:
             else:
                 self.statements_list.append(FunctionCallStatement(token, program, self))
             self.statements_list[-1].parse()
+
+    def add_dollar_signs(self):
+        for statement in self.statements_list:
+            statement.add_dollar_sign()
+        for parameter in self.parameters:
+            parameter += "$"
+        if self.name != "main":
+            self.name += "$"

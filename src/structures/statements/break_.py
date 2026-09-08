@@ -15,7 +15,7 @@ class BreakStatement(BaseStatement):
         if self.arguments:
             raise Error(f"Wrong number of arguments for break: expected 0, got {len(self.arguments)} - line {self.line}")
         if self.function.loop_stack.is_empty():
-            raise Error(f"break outside of LOOP - line {self.line}")
+            raise Error(f"break outside of loop - line {self.line}")
 
     def generate_nasm_code(self):
         return f"jmp .endloop_{self.serial_number_of_loop}\n"

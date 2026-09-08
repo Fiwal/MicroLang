@@ -16,12 +16,12 @@ class ElseStatement(BaseStatement):
 
     def check_for_error(self):
         if self.arguments:
-            raise Error(f"Wrong number of arguments for ELSE: expected 0, got {len(self.arguments)} - line {self.line}")
+            raise Error(f"Wrong number of arguments for else: expected 0, got {len(self.arguments)} - line {self.line}")
         if self.function.if_and_loop_stack.is_empty() or self.function.if_and_loop_stack.peek() == "loop":
-            raise Error(f"ELSE without matching IF - line {self.line}")
+            raise Error(f"else without matching if - line {self.line}")
         current_if = self.function.if_stack.peek()
         if current_if["else"]:
-            raise Error(f"Duplicate ELSE for the same IF - line {self.line}")
+            raise Error(f"Duplicate else for the same if - line {self.line}")
 
     def generate_nasm_code(self):
         return (f"jmp .endif_{self.serial_number_of_if}\n"

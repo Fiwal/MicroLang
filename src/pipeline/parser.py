@@ -22,12 +22,13 @@ class Parser:
         if not self.is_main_function:
             raise Error(f"No function 'main' in code")
         self.parse_functions()
+        self.add_dollar_signs()
         return self.program
 
     def process_token(self, token):
-        if token.name == "FN":
+        if token.name == "fn":
             self.start_function(token)
-        elif token.name == "ENDFN":
+        elif token.name == "endfn":
             self.end_function(token)
         elif self.in_function_body:
             self.append_instruction(token)
@@ -38,7 +39,7 @@ class Parser:
         if self.in_function_body:
             raise Error(f"Function cannot be inside another function - line {token.line}")
         if len(token.arguments) != 2:
-            raise Error(f"Wrong number of arguments for FN: expected 2, got {len(token.arguments)} - line {token.line}")
+            raise Error(f"Wrong number of arguments for fn: expected 2, got {len(token.arguments)} - line {token.line}")
         if check_name_type(token.arguments[0], self.program) != NameType.NOT_FOUND:
             raise Error(f"Multiple name '{token.arguments[0]}' - line {token.line}")
         if not is_valid_name(token.arguments[0]):
@@ -54,14 +55,14 @@ class Parser:
 
     def end_function(self, token):
         if not self.in_function_body:
-            raise Error(f"ENDFN without matching FN - line {token.line}")
+            raise Error(f"endfn without matching fn - line {token.line}")
         if len(token.arguments) != 0:
-            raise Error(f"Wrong number of arguments for ENDFN: expected 0, got {len(token.arguments)} - line {token.line}")
+            raise Error(f"Wrong number of arguments for endfn: expected 0, got {len(token.arguments)} - line {token.line}")
         function = self.get_current_function()
         if function.if_stack.size() > 0:
-            raise Error(f"Unclosed IF in function '{self.program.functions[-1].name}'")
+            raise Error(f"Unclosed if in function '{self.program.functions[-1].name}'")
         if function.loop_stack.size() > 0:
-            raise Error(f"Unclosed LOOP in function '{self.program.functions[-1].name}'")
+            raise Error(f"Unclosed loop in function '{self.program.functions[-1].name}'")
         self.in_function_body = False
 
     def append_instruction(self, token):
@@ -86,7 +87,6 @@ class Parser:
                 if not isinstance(token.arguments[1], int):
                     raise Error(f"The value of the global int variable must be an integer, not an another variable or a float - line {token.line}")
                 self.program.initialized_global_variables.append(GlobalVar(token.arguments[0], VarType.INTEGER, token.arguments[1]))
-
             case _:
                 raise Error(f"Wrong number of arguments for int: expected 1 or 2, got {len(token.arguments)} - line {token.line}")
 
@@ -110,3 +110,11 @@ class Parser:
     def parse_functions(self):
         for function in self.program.functions:
             function.parse_function(self.program)
+
+    def add_dollar_signs(self):
+        for function in self.program.functions:
+            function.add_dollar_signs()
+        for var in self.program.initialized_global_variables:
+            var.name += "$"
+        for var in self.program.uninitialized_global_variables:
+            var.name += "$"

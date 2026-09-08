@@ -1,3 +1,5 @@
-KEYWORDS = ["FN", "ENDFN", "return", "name_parameter", "IF", "ELSE", "ENDIF", "LOOP", "ENDLOOP",
+KEYWORDS = ["fn", "endfn", "return", "name_parameter", "if", "else", "endif", "loop", "endloop",
             "break", "int", "string", "print", "input", "add", "sub", "mul",
             "div", "mod", "set", "return_value"]
+
+COMPARISON_JUMPS = {"==": "ne", "!=": "e", "<": "ge", "<=": "g", ">": "le", ">=": "l"}

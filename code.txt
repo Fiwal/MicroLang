@@ -10,54 +10,54 @@ string: invalid_choice_prompt, "invalid choice\n";
 string: gcd_error_prompt, "GCD(0, 0) is undefined\n";
 string: new_line, "\n";
 
-FN: print_result, 1;
+fn: print_result, 1;
     print: result_prompt;
     print: parameter_0;
     print: new_line;
-ENDFN;
+endfn;
 
-FN: power, 2;
+fn: power, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
     int: counter, 0;
     int: result, 1;
 
-    LOOP;
-        IF: counter, ==, b;
+    loop;
+        if: counter, ==, b;
             break;
-        ENDIF;
+        endif;
         mul: result, a;
         add: counter, 1;
-    ENDLOOP;
+    endloop;
 
     return: result;
-ENDFN;
+endfn;
 
-FN: absolute_value, 1;
+fn: absolute_value, 1;
     name_parameter: a, 0;
 
-    IF: a, <, 0;
+    if: a, <, 0;
         mul: a, -1;
         return: a;
-    ENDIF;
+    endif;
 
     return: a;
-ENDFN;
+endfn;
 
-FN: Euclidean_algorithm, 2;
+fn: Euclidean_algorithm, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
 
-    IF: b, !=, 0;
+    if: b, !=, 0;
         mod: a, b;
         Euclidean_algorithm: b, a;
         return: return_value;
-    ENDIF;
+    endif;
 
     return: a;
-ENDFN;
+endfn;
 
-FN: GCD, 2;
+fn: GCD, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
 
@@ -67,19 +67,19 @@ FN: GCD, 2;
     absolute_value: b;
     set: b, return_value;
 
-    IF: a, ==, 0;
+    if: a, ==, 0;
         return: b;
-    ENDIF;
+    endif;
 
-    IF: b, ==, 0;
+    if: b, ==, 0;
         return: a;
-    ENDIF;
+    endif;
 
     Euclidean_algorithm: a, b;
     return: return_value;
-ENDFN;
+endfn;
 
-FN: LCM, 2;
+fn: LCM, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
 
@@ -91,16 +91,16 @@ FN: LCM, 2;
 
     int: c, a;
     mul: c, b;
-    IF: c, ==, 0;
+    if: c, ==, 0;
         return: 0;
-    ENDIF;
+    endif;
 
     Euclidean_algorithm: a, b;
     div: c, return_value;
     return: c;
-ENDFN;
+endfn;
 
-FN: calculator, 0;
+fn: calculator, 0;
     int: a;
     int: b;
     int: operation_type;
@@ -113,103 +113,103 @@ FN: calculator, 0;
     print: operation_type_prompt;
     input: operation_type;
 
-    IF: operation_type, ==, 1;
+    if: operation_type, ==, 1;
         add: a, b;
         print_result: a;
         return;
-    ENDIF;
+    endif;
 
-    IF: operation_type, ==, 2;
+    if: operation_type, ==, 2;
         sub: a, b;
         print_result: a;
         return;
-    ENDIF;
+    endif;
 
-    IF: operation_type, ==, 3;
+    if: operation_type, ==, 3;
         mul: a, b;
         print_result: a;
         return;
-    ENDIF;
+    endif;
 
-    IF: operation_type, ==, 4;
-        IF: b, !=, 0;
+    if: operation_type, ==, 4;
+        if: b, !=, 0;
             div: a, b;
             print_result: a;
             return;
-        ELSE;
+        else;
             print: divide_by_zero_error_prompt;
             return;
-        ENDIF;
-    ENDIF;
+        endif;
+    endif;
 
-    IF: operation_type, ==, 5;
-        IF: b, !=, 0;
+    if: operation_type, ==, 5;
+        if: b, !=, 0;
             mod: a, b;
             print_result: a;
             return;
-        ELSE;
+        else;
             print: divide_by_zero_error_prompt;
             return;
-        ENDIF;
-    ENDIF;
+        endif;
+    endif;
 
-    IF: operation_type, ==, 6;
-        IF: b, >=, 0;
+    if: operation_type, ==, 6;
+        if: b, >=, 0;
             power: a, b;
             set: a, return_value;
             print_result: a;
             return;
-        ELSE;
+        else;
             print: power_error_prompt;
             return;
-        ENDIF;
-    ENDIF;
+        endif;
+    endif;
 
-    IF: operation_type, ==, 7;
-        IF: a, ==, 0;
-            IF: b, ==, 0;
+    if: operation_type, ==, 7;
+        if: a, ==, 0;
+            if: b, ==, 0;
                 print: gcd_error_prompt;
                 return;
-            ENDIF;
-        ENDIF;
+            endif;
+        endif;
 
         GCD: a, b;
         print: return_value;
         return;
-    ENDIF;
+    endif;
 
-    IF: operation_type, ==, 8;
+    if: operation_type, ==, 8;
         LCM: a, b;
         set: a, return_value;
         print_result: a;
         return;
-    ENDIF;
+    endif;
 
     print: invalid_operation_error_prompt;
-ENDFN;
+endfn;
 
-FN: main, 0;
+fn: main, 0;
     int: exit_choice;
 
-    LOOP;
+    loop;
         calculator;
 
-        LOOP;
+        loop;
             print: exit_prompt;
             input: exit_choice;
 
-            IF: exit_choice, ==, 2;
+            if: exit_choice, ==, 2;
                 return: 0;
-            ELSE;
-                IF: exit_choice, !=, 1;
+            else;
+                if: exit_choice, !=, 1;
                     print: invalid_choice_prompt;
-                ELSE;
+                else;
                     break;
-                ENDIF;
-            ENDIF;
-        ENDLOOP;
+                endif;
+            endif;
+        endloop;
 
-    ENDLOOP;
+    endloop;
 
     return: 0;
-ENDFN;
+endfn;

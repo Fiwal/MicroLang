@@ -14,9 +14,9 @@ class EndloopStatement(BaseStatement):
 
     def check_for_error(self):
         if self.arguments:
-            raise Error(f"Wrong number of arguments for ENDLOOP: expected 0, got {len(self.arguments)} - line {self.line}")
+            raise Error(f"Wrong number of arguments for endloop: expected 0, got {len(self.arguments)} - line {self.line}")
         if self.function.if_and_loop_stack.is_empty() or self.function.if_and_loop_stack.peek() == "if":
-            raise Error(f"ENDLOOP without matching LOOP - line {self.line}")
+            raise Error(f"endloop without matching loop - line {self.line}")
 
     def generate_nasm_code(self):
         return (f"jmp .loop_{self.serial_number_of_loop}\n"

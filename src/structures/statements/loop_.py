@@ -16,7 +16,7 @@ class LoopStatement(BaseStatement):
 
     def check_for_error(self):
         if self.arguments:
-            raise Error(f"Wrong number of arguments for LOOP: expected 0, got {len(self.arguments)} - line {self.line}")
+            raise Error(f"Wrong number of arguments for loop: expected 0, got {len(self.arguments)} - line {self.line}")
 
     def generate_nasm_code(self):
         return f".loop_{self.serial_number_of_loop}:\n"

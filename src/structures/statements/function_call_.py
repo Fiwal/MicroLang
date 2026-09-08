@@ -32,3 +32,9 @@ class FunctionCallStatement(BaseStatement):
         for argument in range(len(self.arguments)):
             nasm_code += f"mov {self.argument_registers[argument]}, {self.arguments[argument]}\n"
         return nasm_code + f"call {self.name}\n"
+
+    def add_dollar_sign(self):
+        super().add_dollar_sign()
+        if self.name != "main":
+            self.name += "$"
+

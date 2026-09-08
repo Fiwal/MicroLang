@@ -3,5 +3,6 @@
 .vscode
 .venv
 .codex
+vscode-extension
 program
 program.o

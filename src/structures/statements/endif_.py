@@ -18,9 +18,9 @@ class EndifStatement(BaseStatement):
 
     def check_for_error(self):
         if self.arguments:
-            raise Error(f"Wrong number of arguments for ENDIF: expected 0, got {len(self.arguments)} - line {self.line}")
+            raise Error(f"Wrong number of arguments for endif: expected 0, got {len(self.arguments)} - line {self.line}")
         if self.function.if_and_loop_stack.is_empty() or self.function.if_and_loop_stack.peek() == "loop":
-            raise Error(f"ENDIF without matching IF - line {self.line}")
+            raise Error(f"endif without matching if - line {self.line}")
 
     def generate_nasm_code(self):
         if self.is_else_after_if:
