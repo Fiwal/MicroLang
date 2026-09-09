@@ -71,7 +71,12 @@ class CodeGenerator:
             self.add_assembly_code(f"sub rsp, {(len(function.local_variables) + function.parameter_count) * 8 + 8}\n")
         for i in range(function.parameter_count):
             self.add_assembly_code(f"%define parameter_{i} [rbp-{(i + 1) * 8}]\n")
-            self.add_assembly_code(f"mov parameter_{i}, {self.arguments_registers[i]}\n")
+            if i < 6:
+                self.add_assembly_code(f"mov parameter_{i}, {self.arguments_registers[i]}\n")
+            else:
+                self.add_assembly_code(
+                    f"mov r15, [rbp+{16 + (i - 6) * 8}]\n"
+                    f"mov parameter_{i}, r15\n")
 
     def end_function(self, function):
         self.add_assembly_code(".end:\n")

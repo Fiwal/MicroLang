@@ -29,9 +29,18 @@ class FunctionCallStatement(BaseStatement):
 
     def generate_nasm_code(self):
         nasm_code = ""
-        for argument in range(len(self.arguments)):
-            nasm_code += f"mov {self.argument_registers[argument]}, {self.arguments[argument]}\n"
-        return nasm_code + f"call {self.name}\n"
+        if len(self.arguments) <= 6:
+            for i in range(len(self.arguments)):
+                nasm_code += f"mov {self.argument_registers[i]}, {self.arguments[i]}\n"
+            return nasm_code + f"call {self.name}\n"
+        for i in range(6):
+            nasm_code += f"mov {self.argument_registers[i]}, {self.arguments[i]}\n"
+        if len(self.arguments) % 2 != 0:
+            nasm_code += f"sub rsp, 8\n"
+        for i in range(len(self.arguments) - 1, 5, -1):
+            nasm_code += f"push {self.arguments[i]}\n"
+        return nasm_code + (f"call {self.name}\n"
+                            f"add rsp, {(len(self.arguments) - 6) * 8 + 8 * (len(self.arguments) % 2)}\n")
 
     def add_dollar_sign(self):
         super().add_dollar_sign()

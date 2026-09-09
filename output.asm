@@ -24,18 +24,24 @@ mov rbp, rsp
 sub rsp, 16
 %define parameter_0 [rbp-8]
 mov parameter_0, rdi
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, result_prompt$
 xor rax, rax
 call printf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_int?
 mov rsi, parameter_0
 xor rax, rax
 call printf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, new_line$
 xor rax, rax
 call printf
+mov rax, r15
 .end:
 %undef parameter_0
 mov rsp, rbp
@@ -52,11 +58,11 @@ mov parameter_1, rsi
 %define a parameter_0
 %define b parameter_1
 %define counter$ [rbp-24]
-mov rax, 0
-mov counter$, rax
+mov r15, 0
+mov counter$, r15
 %define result$ [rbp-32]
-mov rax, 1
-mov result$, rax
+mov r15, 1
+mov result$, r15
 .loop_0:
 mov r8, counter$
 mov r9, b
@@ -64,11 +70,11 @@ cmp r8, r9
 jne .else_0
 jmp .endloop_0
 .else_0:
-mov rax, result$
-imul rax, a
-mov result$, rax
-mov rax, 1
-add counter$, rax
+mov r15, result$
+imul r15, a
+mov result$, r15
+mov r15, 1
+add counter$, r15
 jmp .loop_0
 .endloop_0:
 mov rax, result$
@@ -94,9 +100,9 @@ mov r8, a
 mov r9, 0
 cmp r8, r9
 jge .else_0
-mov rax, a
-imul rax, -1
-mov a, rax
+mov r15, a
+imul r15, -1
+mov a, r15
 mov rax, a
 jmp .end
 .else_0:
@@ -122,11 +128,13 @@ mov r8, b
 mov r9, 0
 cmp r8, r9
 je .else_0
+mov r15, rax
 mov r11, b
 mov rax, a
 cqo
 idiv r11
 mov a, rdx
+mov rax, r15
 mov rdi, b
 mov rsi, a
 call Euclidean_algorithm$
@@ -155,12 +163,12 @@ mov parameter_1, rsi
 %define b parameter_1
 mov rdi, a
 call absolute_value$
-mov rax, return_value
-mov a, rax
+mov r15, return_value
+mov a, r15
 mov rdi, b
 call absolute_value$
-mov rax, return_value
-mov b, rax
+mov r15, return_value
+mov b, r15
 mov r8, a
 mov r9, 0
 cmp r8, r9
@@ -200,18 +208,18 @@ mov parameter_1, rsi
 %define b parameter_1
 mov rdi, a
 call absolute_value$
-mov rax, return_value
-mov a, rax
+mov r15, return_value
+mov a, r15
 mov rdi, b
 call absolute_value$
-mov rax, return_value
-mov b, rax
+mov r15, return_value
+mov b, r15
 %define c$ [rbp-24]
-mov rax, a
-mov c$, rax
-mov rax, c$
-imul rax, b
-mov c$, rax
+mov r15, a
+mov c$, r15
+mov r15, c$
+imul r15, b
+mov c$, r15
 mov r8, c$
 mov r9, 0
 cmp r8, r9
@@ -222,11 +230,13 @@ jmp .end
 mov rdi, a
 mov rsi, b
 call Euclidean_algorithm$
+mov r15, rax
 mov r11, return_value
 mov rax, c$
 cqo
 idiv r11
 mov c$, rax
+mov rax, r15
 mov rax, c$
 jmp .end
 .end:
@@ -245,36 +255,48 @@ sub rsp, 32
 %define a$ [rbp-8]
 %define b$ [rbp-16]
 %define operation_type$ [rbp-24]
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, num_prompt_1$
 xor rax, rax
 call printf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_int?
 lea rsi, a$
 xor rax, rax
 call scanf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, num_prompt_2$
 xor rax, rax
 call printf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_int?
 lea rsi, b$
 xor rax, rax
 call scanf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, operation_type_prompt$
 xor rax, rax
 call printf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_int?
 lea rsi, operation_type$
 xor rax, rax
 call scanf
+mov rax, r15
 mov r8, operation_type$
 mov r9, 1
 cmp r8, r9
 jne .else_0
-mov rax, b$
-add a$, rax
+mov r15, b$
+add a$, r15
 mov rdi, a$
 call print_result$
 jmp .end
@@ -283,8 +305,8 @@ mov r8, operation_type$
 mov r9, 2
 cmp r8, r9
 jne .else_1
-mov rax, b$
-sub a$, rax
+mov r15, b$
+sub a$, r15
 mov rdi, a$
 call print_result$
 jmp .end
@@ -293,9 +315,9 @@ mov r8, operation_type$
 mov r9, 3
 cmp r8, r9
 jne .else_2
-mov rax, a$
-imul rax, b$
-mov a$, rax
+mov r15, a$
+imul r15, b$
+mov a$, r15
 mov rdi, a$
 call print_result$
 jmp .end
@@ -308,20 +330,24 @@ mov r8, b$
 mov r9, 0
 cmp r8, r9
 je .else_4
+mov r15, rax
 mov r11, b$
 mov rax, a$
 cqo
 idiv r11
 mov a$, rax
+mov rax, r15
 mov rdi, a$
 call print_result$
 jmp .end
 jmp .endif_4
 .else_4:
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, divide_by_zero_error_prompt$
 xor rax, rax
 call printf
+mov rax, r15
 jmp .end
 .endif_4:
 .else_3:
@@ -333,20 +359,24 @@ mov r8, b$
 mov r9, 0
 cmp r8, r9
 je .else_6
+mov r15, rax
 mov r11, b$
 mov rax, a$
 cqo
 idiv r11
 mov a$, rdx
+mov rax, r15
 mov rdi, a$
 call print_result$
 jmp .end
 jmp .endif_6
 .else_6:
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, divide_by_zero_error_prompt$
 xor rax, rax
 call printf
+mov rax, r15
 jmp .end
 .endif_6:
 .else_5:
@@ -361,17 +391,19 @@ jl .else_8
 mov rdi, a$
 mov rsi, b$
 call power$
-mov rax, return_value
-mov a$, rax
+mov r15, return_value
+mov a$, r15
 mov rdi, a$
 call print_result$
 jmp .end
 jmp .endif_8
 .else_8:
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, power_error_prompt$
 xor rax, rax
 call printf
+mov rax, r15
 jmp .end
 .endif_8:
 .else_7:
@@ -387,20 +419,24 @@ mov r8, b$
 mov r9, 0
 cmp r8, r9
 jne .else_11
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, gcd_error_prompt$
 xor rax, rax
 call printf
+mov rax, r15
 jmp .end
 .else_11:
 .else_10:
 mov rdi, a$
 mov rsi, b$
 call GCD$
+mov r15, rax
 mov rdi, fmt_int?
 mov rsi, return_value
 xor rax, rax
 call printf
+mov rax, r15
 jmp .end
 .else_9:
 mov r8, operation_type$
@@ -410,16 +446,18 @@ jne .else_12
 mov rdi, a$
 mov rsi, b$
 call LCM$
-mov rax, return_value
-mov a$, rax
+mov r15, return_value
+mov a$, r15
 mov rdi, a$
 call print_result$
 jmp .end
 .else_12:
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, invalid_operation_error_prompt$
 xor rax, rax
 call printf
+mov rax, r15
 .end:
 %undef a
 %undef b
@@ -435,14 +473,18 @@ sub rsp, 16
 .loop_0:
 call calculator$
 .loop_1:
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, exit_prompt$
 xor rax, rax
 call printf
+mov rax, r15
+mov r15, rax
 mov rdi, fmt_int?
 lea rsi, exit_choice$
 xor rax, rax
 call scanf
+mov rax, r15
 mov r8, exit_choice$
 mov r9, 2
 cmp r8, r9
@@ -455,10 +497,12 @@ mov r8, exit_choice$
 mov r9, 1
 cmp r8, r9
 je .else_1
+mov r15, rax
 mov rdi, fmt_str?
 mov rsi, invalid_choice_prompt$
 xor rax, rax
 call printf
+mov rax, r15
 jmp .endif_1
 .else_1:
 jmp .endloop_1

@@ -46,8 +46,6 @@ class Parser:
             raise Error(f"Wrong function name '{token.arguments[0]}' - line {token.line}")
         if not isinstance(token.arguments[1], int):
             raise Error(f"Parameter count must be an integer - line {token.line}")
-        if token.arguments[1] < 0 or token.arguments[1] > 6:
-            raise Error(f"Parameter count must be between 0 and 6 (inclusive) - line {token.line}")
         if token.arguments[0] == "main":
             self.is_main_function = True
         self.program.functions.append(Function(token.arguments[0], token.arguments[1]))

@@ -16,7 +16,9 @@ class InputStatement(BaseStatement):
 
     def generate_nasm_code(self):
         return (
+            "mov r15, rax\n"
             "mov rdi, fmt_int?\n"
             f"lea rsi, {self.arguments[0]}\n"
             "xor rax, rax\n"
-            "call scanf\n")
+            "call scanf\n"
+            "mov rax, r15\n")

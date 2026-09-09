@@ -30,5 +30,5 @@ class IntStatement(BaseStatement):
         else:
             return (
                 f"%define {self.arguments[0]} [rbp-{(self.serial_number_of_variable + self.function.parameter_count) * 8}]\n"
-                f"mov rax, {self.arguments[1]}\n"
-                f"mov {self.arguments[0]}, rax\n")
+                f"mov r15, {self.arguments[1]}\n"
+                f"mov {self.arguments[0]}, r15\n")

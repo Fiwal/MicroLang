@@ -17,12 +17,16 @@ class PrintStatement(BaseStatement):
     def generate_nasm_code(self):
         if check_name(self.arguments[0], self.program, self.function) == NameType.STRING_VARIABLE:
             return (
+                "mov r15, rax\n"
                 "mov rdi, fmt_str?\n"
                 f"mov rsi, {self.arguments[0]}\n"
                 "xor rax, rax\n"
-                "call printf\n")
+                "call printf\n"
+                "mov rax, r15\n")
         return (
+            "mov r15, rax\n"
             "mov rdi, fmt_int?\n"
             f"mov rsi, {self.arguments[0]}\n"
             "xor rax, rax\n"
-            "call printf\n")
+            "call printf\n"
+            "mov rax, r15\n")
