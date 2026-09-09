@@ -1,7 +1,7 @@
 from src.exceptions import Error
 from src.utils import check_name_type as check_name, is_valid_name
 from src.enums import NameType
-from src.structures.statements.base_statement import BaseStatement
+from src.structures.statements.base_stmt import BaseStatement
 
 
 class IntStatement(BaseStatement):

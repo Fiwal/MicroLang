@@ -1,5 +1,5 @@
 from src.exceptions import Error
-from src.structures.statements.base_statement import BaseStatement
+from src.structures.statements.base_stmt import BaseStatement
 
 
 class BreakStatement(BaseStatement):

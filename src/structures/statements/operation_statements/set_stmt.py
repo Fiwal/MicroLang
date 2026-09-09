@@ -1,4 +1,4 @@
-from src.structures.statements.operation_statements.operation_statement import OperationStatement
+from src.structures.statements.operation_statements.operation_stmt import OperationStatement
 
 
 class SetStatement(OperationStatement):
