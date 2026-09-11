@@ -37,6 +37,8 @@ class Lexer:
             self.add_line()
             if self.in_comment:
                 self.in_comment = False
+            elif self.in_quote:
+                self.capture_char_in_quotes("\\n")
             return
         if char == self.COMMENT_CHAR and not self.in_comment and not self.in_quote:
             self.in_comment = True

@@ -16,8 +16,3 @@ from .break_stmt import BreakStatement
 from .endloop_stmt import EndloopStatement
 from .name_parameter_stmt import NameParameterStatement
 from .function_call_stmt import FunctionCallStatement
-
-__all__ = ["IntStatement", "AddStatement", "SubStatement", "MulStatement", "DivStatement", "ModStatement",
-           "SetStatement", "InputStatement", "PrintStatement", "ReturnStatement",
-           "IfStatement", "ElseStatement", "EndifStatement", "LoopStatement", "BreakStatement", "EndloopStatement",
-           "NameParameterStatement", "FunctionCallStatement"]

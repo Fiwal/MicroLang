@@ -2,31 +2,52 @@ from src.exceptions import Error
 from src.enums import NameType
 from src.utils import check_name_type as check_name
 from src.structures.statements.base_stmt import BaseStatement
+from src.structures.global_var import GlobalVar
+from src.enums import VarType
 
 
 class PrintStatement(BaseStatement):
     def parse(self):
         self.check_for_error()
+        for i in range(len(self.arguments)):
+            if isinstance(self.arguments[i], str) and (self.arguments[i].count("`") == 2) and self.arguments[i][0] == "`" and self.arguments[i][-1] == "`":
+                found_var = False
+                for var in self.program.initialized_global_variables:
+                    if var.value == self.arguments[i]:
+                        self.arguments[i] = var.name
+                        found_var = True
+                        break
+                if not found_var:
+                    auto_str_num = len(self.program.initialized_global_variables)
+                    self.program.initialized_global_variables.append(GlobalVar(f"str$auto{auto_str_num}", VarType.STRING, self.arguments[i]))
+                    self.arguments[i] = f"str$auto{auto_str_num}"
 
     def check_for_error(self):
-        if len(self.arguments) != 1:
-            raise Error(f"Wrong number of arguments for print: expected 1, got {len(self.arguments)} - line {self.line}")
-        if check_name(self.arguments[0], self.program, self.function) not in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM, NameType.STRING_VARIABLE]:
-            raise Error(f"Wrong argument for print '{self.arguments[0]}' - line {self.line}")
+        if len(self.arguments) < 1:
+            raise Error(f"Wrong number of arguments for print: expected at least 1, got {len(self.arguments)} - line {self.line}")
+        for argument in self.arguments:
+            if isinstance(argument, str) and (argument.count("`") == 2) and argument[0] == "`" and argument[-1] == "`":
+                continue
+            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM, NameType.STRING_VARIABLE]:
+                raise Error(f"Wrong argument for print '{argument}' - line {self.line}")
 
     def generate_nasm_code(self):
-        if check_name(self.arguments[0], self.program, self.function) == NameType.STRING_VARIABLE:
-            return (
+        nasm_code = ""
+        for argument in self.arguments:
+            if check_name(argument, self.program, self.function) == NameType.STRING_VARIABLE:
+                nasm_code += (
+                    "mov r15, rax\n"
+                    "mov rdi, fmt_str?\n"
+                    f"mov rsi, {argument}\n"
+                    "xor rax, rax\n"
+                    "call printf\n"
+                    "mov rax, r15\n")
+                continue
+            nasm_code += (
                 "mov r15, rax\n"
-                "mov rdi, fmt_str?\n"
-                f"mov rsi, {self.arguments[0]}\n"
+                "mov rdi, fmt_int?\n"
+                f"mov rsi, {argument}\n"
                 "xor rax, rax\n"
                 "call printf\n"
                 "mov rax, r15\n")
-        return (
-            "mov r15, rax\n"
-            "mov rdi, fmt_int?\n"
-            f"mov rsi, {self.arguments[0]}\n"
-            "xor rax, rax\n"
-            "call printf\n"
-            "mov rax, r15\n")
+        return nasm_code

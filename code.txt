@@ -1,21 +1,3 @@
-string: num_prompt_1, "enter a: ";
-string: num_prompt_2, "enter b: ";
-string: operation_type_prompt, "1 - addition\n2 - subtract\n3 - multiply\n4 - divide\n5 - modulus\n6 - power\n7 - the greatest common divisor (GCD)\n8 - the least common multiple (LCM)\nenter your choice: ";
-string: result_prompt, "result: ";
-string: exit_prompt, "do you want to exit? (1-NO/2-yes): ";
-string: invalid_operation_error_prompt, "invalid operation type\n";
-string: divide_by_zero_error_prompt, "cannot divide by zero\n";
-string: power_error_prompt, "program cannot raise to a negative power\n";
-string: invalid_choice_prompt, "invalid choice\n";
-string: gcd_error_prompt, "GCD(0, 0) is undefined\n";
-string: new_line, "\n";
-
-fn: print_result, 1;
-    print: result_prompt;
-    print: parameter_0;
-    print: new_line;
-endfn;
-
 fn: power, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
@@ -105,39 +87,48 @@ fn: calculator, 0;
     int: b;
     int: operation_type;
 
-    print: num_prompt_1;
+    print: "enter a: ";
     input: a;
-    print: num_prompt_2;
+    print: "enter b: ";
     input: b;
 
-    print: operation_type_prompt;
+    print:
+        "1 - addition\n",
+        "2 - subtract\n",
+        "3 - multiply\n",
+        "4 - divide\n",
+        "5 - modulus\n",
+        "6 - power\n",
+        "7 - the greatest common divisor (GCD)\n",
+        "8 - the least common multiple (LCM)\n",
+        "enter your choice: ";
     input: operation_type;
 
     if: operation_type, ==, 1;
         add: a, b;
-        print_result: a;
+        print: "result: ", a, "\n";
         return;
     endif;
 
     if: operation_type, ==, 2;
         sub: a, b;
-        print_result: a;
+        print: "result: ", a, "\n";
         return;
     endif;
 
     if: operation_type, ==, 3;
         mul: a, b;
-        print_result: a;
+        print: "result: ", a, "\n";
         return;
     endif;
 
     if: operation_type, ==, 4;
         if: b, !=, 0;
             div: a, b;
-            print_result: a;
+            print: "result: ", a, "\n";
             return;
         else;
-            print: divide_by_zero_error_prompt;
+            print: "cannot divide by zero\n";
             return;
         endif;
     endif;
@@ -145,10 +136,10 @@ fn: calculator, 0;
     if: operation_type, ==, 5;
         if: b, !=, 0;
             mod: a, b;
-            print_result: a;
+            print: "result: ", a, "\n";
             return;
         else;
-            print: divide_by_zero_error_prompt;
+            print: "cannot divide by zero\n";
             return;
         endif;
     endif;
@@ -157,10 +148,10 @@ fn: calculator, 0;
         if: b, >=, 0;
             power: a, b;
             set: a, return_value;
-            print_result: a;
+            print: "result: ", a, "\n";
             return;
         else;
-            print: power_error_prompt;
+            print: "program cannot raise to a negative power\n";
             return;
         endif;
     endif;
@@ -168,24 +159,23 @@ fn: calculator, 0;
     if: operation_type, ==, 7;
         if: a, ==, 0;
             if: b, ==, 0;
-                print: gcd_error_prompt;
+                print: "GCD(0, 0) is undefined\n";
                 return;
             endif;
         endif;
 
         GCD: a, b;
-        print: return_value;
+        print: "result: ", return_value, "\n";
         return;
     endif;
 
     if: operation_type, ==, 8;
         LCM: a, b;
-        set: a, return_value;
-        print_result: a;
+        print: "result: ", return_value, "\n";
         return;
     endif;
 
-    print: invalid_operation_error_prompt;
+    print: "invalid operation type\n";
 endfn;
 
 fn: main, 0;
@@ -195,14 +185,14 @@ fn: main, 0;
         calculator;
 
         loop;
-            print: exit_prompt;
+            print: "do you want to exit? (1-NO/2-yes): ";
             input: exit_choice;
 
             if: exit_choice, ==, 2;
                 return: 0;
             else;
                 if: exit_choice, !=, 1;
-                    print: invalid_choice_prompt;
+                    print: "invalid choice\n";
                 else;
                     break;
                 endif;
