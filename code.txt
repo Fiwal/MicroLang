@@ -45,7 +45,6 @@ fn: GCD, 2;
 
     absolute_value: a;
     set: a, return_value;
-
     absolute_value: b;
     set: b, return_value;
 
@@ -67,7 +66,6 @@ fn: LCM, 2;
 
     absolute_value: a;
     set: a, return_value;
-
     absolute_value: b;
     set: b, return_value;
 
@@ -91,7 +89,6 @@ fn: calculator, 0;
     input: a;
     print: "enter b: ";
     input: b;
-
     print:
         "1 - addition\n",
         "2 - subtract\n",
@@ -163,7 +160,6 @@ fn: calculator, 0;
                 return;
             endif;
         endif;
-
         GCD: a, b;
         print: "result: ", return_value, "\n";
         return;
@@ -183,11 +179,9 @@ fn: main, 0;
 
     loop;
         calculator;
-
         loop;
             print: "do you want to exit? (1-NO/2-yes): ";
             input: exit_choice;
-
             if: exit_choice, ==, 2;
                 return: 0;
             else;
@@ -198,7 +192,6 @@ fn: main, 0;
                 endif;
             endif;
         endloop;
-
     endloop;
 
     return: 0;

@@ -99,7 +99,12 @@ class Lexer:
             self.capture_token_name()
         else:
             self.capture_argument()
-        self.tokens.append(Token(self.current_token_name, self.token_line, self.current_arguments))
+        if self.current_token_name.startswith("-"):
+            if len(self.tokens) == 0:
+                raise Error(f"No token to connect with - line {self.line_number}")
+            self.tokens[-1].connected_tokens.append(Token(self.current_token_name[1:], self.token_line, self.current_arguments))
+        else:
+            self.tokens.append(Token(self.current_token_name, self.token_line, self.current_arguments))
         self.reset_token_state()
 
     def capture_character(self, char):

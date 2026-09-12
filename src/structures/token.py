@@ -5,4 +5,5 @@ from typing import Any
 class Token:
     name: Any
     line: int
-    arguments: list[Any] = field(default_factory=list) 
+    arguments: list[Any] = field(default_factory=list)
+    connected_tokens: list["Token"] = field(default_factory=list)

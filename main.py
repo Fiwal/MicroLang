@@ -5,4 +5,4 @@ if __name__ == "__main__":
     compilator = Compiler("code.txt", "program")
     compilator.compile()
 
-#820 lines of code
+#880 lines of code
