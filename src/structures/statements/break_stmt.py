@@ -14,6 +14,8 @@ class BreakStatement(BaseStatement):
     def check_for_error(self):
         if self.arguments:
             raise Error(f"Wrong number of arguments for break: expected 0, got {len(self.arguments)} - line {self.line}")
+        if self.connected_tokens:
+            raise Error(f"Cannot connect instructions with break - line {self.connected_tokens[0].line}")
         if self.function.loop_stack.is_empty():
             raise Error(f"break outside of loop - line {self.line}")
 

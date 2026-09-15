@@ -25,6 +25,8 @@ class PrintStatement(BaseStatement):
     def check_for_error(self):
         if len(self.arguments) < 1:
             raise Error(f"Wrong number of arguments for print: expected at least 1, got {len(self.arguments)} - line {self.line}")
+        if self.connected_tokens:
+            raise Error(f"Cannot connect instructions with print - line {self.connected_tokens[0].line}")
         for argument in self.arguments:
             if isinstance(argument, str) and (argument.count("`") == 2) and argument[0] == "`" and argument[-1] == "`":
                 continue

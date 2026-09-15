@@ -19,6 +19,8 @@ class EndifStatement(BaseStatement):
     def check_for_error(self):
         if self.arguments:
             raise Error(f"Wrong number of arguments for endif: expected 0, got {len(self.arguments)} - line {self.line}")
+        if self.connected_tokens:
+            raise Error(f"Cannot connect instructions with endif - line {self.connected_tokens[0].line}")
         if self.function.if_and_loop_stack.is_empty() or self.function.if_and_loop_stack.peek() == "loop":
             raise Error(f"endif without matching if - line {self.line}")
 

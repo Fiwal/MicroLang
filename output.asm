@@ -34,8 +34,8 @@ sub rsp, 32
 mov parameter_0, rdi
 %define parameter_1 [rbp-16]
 mov parameter_1, rsi
-%define a parameter_0
-%define b parameter_1
+%define a$ parameter_0
+%define b$ parameter_1
 %define counter$ [rbp-24]
 mov r15, 0
 mov counter$, r15
@@ -44,13 +44,13 @@ mov r15, 1
 mov result$, r15
 .loop_0:
 mov r8, counter$
-mov r9, b
+mov r9, b$
 cmp r8, r9
 jne .else_0
 jmp .endloop_0
 .else_0:
 mov r15, result$
-imul r15, a
+imul r15, a$
 mov result$, r15
 mov r15, 1
 add counter$, r15
@@ -74,18 +74,18 @@ mov rbp, rsp
 sub rsp, 16
 %define parameter_0 [rbp-8]
 mov parameter_0, rdi
-%define a parameter_0
-mov r8, a
+%define a$ parameter_0
+mov r8, a$
 mov r9, 0
 cmp r8, r9
 jge .else_0
-mov r15, a
+mov r15, a$
 imul r15, -1
-mov a, r15
-mov rax, a
+mov a$, r15
+mov rax, a$
 jmp .end
 .else_0:
-mov rax, a
+mov rax, a$
 jmp .end
 .end:
 %undef parameter_0
@@ -101,26 +101,26 @@ sub rsp, 16
 mov parameter_0, rdi
 %define parameter_1 [rbp-16]
 mov parameter_1, rsi
-%define a parameter_0
-%define b parameter_1
-mov r8, b
+%define a$ parameter_0
+%define b$ parameter_1
+mov r8, b$
 mov r9, 0
 cmp r8, r9
 je .else_0
 mov r15, rax
-mov r11, b
-mov rax, a
+mov r11, b$
+mov rax, a$
 cqo
 idiv r11
-mov a, rdx
+mov a$, rdx
 mov rax, r15
-mov rdi, b
-mov rsi, a
+mov rdi, b$
+mov rsi, a$
 call Euclidean_algorithm$
 mov rax, return_value
 jmp .end
 .else_0:
-mov rax, a
+mov rax, a$
 jmp .end
 .end:
 %undef parameter_0
@@ -138,32 +138,32 @@ sub rsp, 16
 mov parameter_0, rdi
 %define parameter_1 [rbp-16]
 mov parameter_1, rsi
-%define a parameter_0
-%define b parameter_1
-mov rdi, a
+%define a$ parameter_0
+%define b$ parameter_1
+mov rdi, a$
 call absolute_value$
 mov r15, return_value
-mov a, r15
-mov rdi, b
+mov a$, r15
+mov rdi, b$
 call absolute_value$
 mov r15, return_value
-mov b, r15
-mov r8, a
+mov b$, r15
+mov r8, a$
 mov r9, 0
 cmp r8, r9
 jne .else_0
-mov rax, b
+mov rax, b$
 jmp .end
 .else_0:
-mov r8, b
+mov r8, b$
 mov r9, 0
 cmp r8, r9
 jne .else_1
-mov rax, a
+mov rax, a$
 jmp .end
 .else_1:
-mov rdi, a
-mov rsi, b
+mov rdi, a$
+mov rsi, b$
 call Euclidean_algorithm$
 mov rax, return_value
 jmp .end
@@ -183,21 +183,21 @@ sub rsp, 32
 mov parameter_0, rdi
 %define parameter_1 [rbp-16]
 mov parameter_1, rsi
-%define a parameter_0
-%define b parameter_1
-mov rdi, a
+%define a$ parameter_0
+%define b$ parameter_1
+mov rdi, a$
 call absolute_value$
 mov r15, return_value
-mov a, r15
-mov rdi, b
+mov a$, r15
+mov rdi, b$
 call absolute_value$
 mov r15, return_value
-mov b, r15
+mov b$, r15
 %define c$ [rbp-24]
-mov r15, a
+mov r15, a$
 mov c$, r15
 mov r15, c$
-imul r15, b
+imul r15, b$
 mov c$, r15
 mov r8, c$
 mov r9, 0
@@ -206,11 +206,12 @@ jne .else_0
 mov rax, 0
 jmp .end
 .else_0:
-mov rdi, a
-mov rsi, b
+mov rdi, a$
+mov rsi, b$
 call Euclidean_algorithm$
+mov a$, rax
 mov r15, rax
-mov r11, return_value
+mov r11, a$
 mov rax, c$
 cqo
 idiv r11

@@ -1,16 +1,21 @@
 from src.utils import KEYWORDS, COMPARISON_JUMPS
-from src.utils import check_name_type
-from src.enums import NameType
+
 
 class BaseStatement:
     def __init__(self, token, program, function):
         self.arguments = token.arguments
+        self.connected_tokens = token.connected_tokens
         self.line = token.line
         self.program = program
         self.function = function
 
     def add_dollar_sign(self):
+        def add_dollar_sign_to_argument(argument):
+            if isinstance(argument, str) and not argument in KEYWORDS and not argument in COMPARISON_JUMPS:
+                return argument + "$"
+            return argument
         for i in range(len(self.arguments)):
-            if (isinstance(self.arguments[i], str) and not self.arguments[i] in KEYWORDS and not self.arguments[i] in COMPARISON_JUMPS
-                    and not check_name_type(self.arguments[i], self.program, self.function) == NameType.PARAMETER):
-                self.arguments[i] = self.arguments[i] + "$"
+            self.arguments[i] = add_dollar_sign_to_argument(self.arguments[i])
+        for token in self.connected_tokens:
+            for i in range(len(token.arguments)):
+                token.arguments[i] = add_dollar_sign_to_argument(token.arguments[i])

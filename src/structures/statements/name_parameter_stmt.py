@@ -13,6 +13,8 @@ class NameParameterStatement(BaseStatement):
     def check_for_error(self):
         if len(self.arguments) != 2:
             raise Error(f"Wrong number of arguments for name_parameter: expected 2, got {len(self.arguments)} - line {self.line}")
+        if self.connected_tokens:
+            raise Error(f"Cannot connect instructions with name_parameter - line {self.connected_tokens[0].line}")
         if not is_valid_name(self.arguments[0]):
             raise Error(f"Wrong parameter name '{self.arguments[0]}' - line {self.line}")
         if check_name(self.arguments[0], self.program, self.function) != NameType.NOT_FOUND:

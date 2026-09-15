@@ -76,7 +76,8 @@ fn: LCM, 2;
     endif;
 
     Euclidean_algorithm: a, b;
-    div: c, return_value;
+    -get: a;
+    div: c, a;
     return: c;
 endfn;
 
