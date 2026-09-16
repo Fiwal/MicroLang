@@ -14,10 +14,10 @@ def check_name_type(name, program, current_function = None):
                 return NameType.INT_VARIABLE
         for parameter in current_function.parameters:
             if parameter == name:
-                return NameType.PARAMETER
+                return NameType.INT_VARIABLE
         for i in range(0, current_function.parameter_count):
             if name == f"parameter_{i}":
-                return NameType.PARAMETER
+                return NameType.INT_VARIABLE
             
     for var in (program.uninitialized_global_variables + program.initialized_global_variables):
         if var.name == name:
@@ -25,8 +25,5 @@ def check_name_type(name, program, current_function = None):
                 return NameType.INT_VARIABLE
             if var.type == VarType.STRING:
                 return NameType.STRING_VARIABLE
-
-    if name == "return_value":
-        return NameType.RETURN_VALUE
 
     return NameType.NOT_FOUND

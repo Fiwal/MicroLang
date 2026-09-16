@@ -13,14 +13,12 @@ class InputStatement(BaseStatement):
             raise Error(f"Wrong number of arguments for input: expected 1, got {len(self.arguments)} - line {self.line}")
         if self.connected_tokens:
             raise Error(f"Cannot connect instructions with input - line {self.connected_tokens[0].line}")
-        if check_name(self.arguments[0], self.program, self.function) not in [NameType.INT_VARIABLE, NameType.PARAMETER]:
+        if check_name(self.arguments[0], self.program, self.function) not in [NameType.INT_VARIABLE]:
             raise Error(f"Wrong argument '{self.arguments[0]}' - line {self.line}")
 
     def generate_nasm_code(self):
         return (
-            "mov r15, rax\n"
             "mov rdi, fmt_int?\n"
             f"lea rsi, {self.arguments[0]}\n"
             "xor rax, rax\n"
-            "call scanf\n"
-            "mov rax, r15\n")
+            "call scanf\n")

@@ -22,7 +22,7 @@ class IfStatement(BaseStatement):
             raise Error(f"Wrong number of arguments for if: expected 3, got {len(self.arguments)} - line {self.line}")
         if self.connected_tokens:
             raise Error(f"Cannot connect instructions with if - line {self.connected_tokens[0].line}")
-        value_types = [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]
+        value_types = [NameType.INT_VARIABLE, NameType.INT_NUM]
         if check_name(self.arguments[0], self.program, self.function) not in value_types:
             raise Error(f"Wrong first argument for if '{self.arguments[0]}' - line {self.line}")
         if self.arguments[1] not in COMPARISON_JUMPS:

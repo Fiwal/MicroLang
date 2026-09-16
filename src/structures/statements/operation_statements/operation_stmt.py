@@ -13,7 +13,7 @@ class OperationStatement(BaseStatement):
             raise Error(f"Wrong number of arguments for {self.operation_name}: expected 2, got {len(self.arguments)} - line {self.line}")
         if self.connected_tokens:
             raise Error(f"Cannot connect instructions with {self.operation_name} - line {self.connected_tokens[0].line}")
-        if not check_name(self.arguments[0], self.program, self.function) in [NameType.INT_VARIABLE, NameType.PARAMETER]:
+        if not check_name(self.arguments[0], self.program, self.function) in [NameType.INT_VARIABLE]:
             raise Error(f"Wrong first argument for {self.operation_name} '{self.arguments[0]}' - line {self.line}")
-        if not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
+        if not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.INT_NUM]:
             raise Error(f"Wrong argument '{self.arguments[1]}' - line {self.line}")

@@ -25,7 +25,7 @@ class FunctionCallStatement(BaseStatement):
         if len(self.arguments) != expected_num_of_arguments:
             raise Error(f"Wrong number of arguments for {self.name}: expected {expected_num_of_arguments}, got {len(self.arguments)} - line {self.line}")
         for argument in self.arguments:
-            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM]:
+            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.INT_NUM]:
                 raise Error(f"Wrong argument for {self.name} '{argument}' - line {self.line}")
 
     def check_for_error_in_connected_tokens(self):
@@ -37,7 +37,7 @@ class FunctionCallStatement(BaseStatement):
                 raise Error(f"Wrong connected instruction name {connected_token.name} - line {connected_token.line}")
             if len(connected_token.arguments) != 1:
                 raise Error(f"Wrong number of arguments for {connected_token.name}: expected 1, got {len(connected_token.arguments)} - line {self.line}")
-            if check_name(connected_token.arguments[0], self.program, self.function) not in [NameType.INT_VARIABLE, NameType.PARAMETER]:
+            if check_name(connected_token.arguments[0], self.program, self.function) not in [NameType.INT_VARIABLE]:
                 raise Error(f"Wrong argument for {connected_token.name} '{connected_token.arguments[0]}' - line {self.line}")
 
     def generate_nasm_code(self):

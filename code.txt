@@ -29,11 +29,13 @@ endfn;
 fn: Euclidean_algorithm, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
+    int: c;
 
     if: b, !=, 0;
         mod: a, b;
         Euclidean_algorithm: b, a;
-        return: return_value;
+        -get: c;
+        return: c;
     endif;
 
     return: a;
@@ -44,9 +46,9 @@ fn: GCD, 2;
     name_parameter: b, 1;
 
     absolute_value: a;
-    set: a, return_value;
+    -get: a;
     absolute_value: b;
-    set: b, return_value;
+    -get: b;
 
     if: a, ==, 0;
         return: b;
@@ -57,7 +59,8 @@ fn: GCD, 2;
     endif;
 
     Euclidean_algorithm: a, b;
-    return: return_value;
+    -get: a;
+    return: a;
 endfn;
 
 fn: LCM, 2;
@@ -65,9 +68,9 @@ fn: LCM, 2;
     name_parameter: b, 1;
 
     absolute_value: a;
-    set: a, return_value;
+    -get: a;
     absolute_value: b;
-    set: b, return_value;
+    -get: b;
 
     int: c, a;
     mul: c, b;
@@ -145,7 +148,7 @@ fn: calculator, 0;
     if: operation_type, ==, 6;
         if: b, >=, 0;
             power: a, b;
-            set: a, return_value;
+            -get: a;
             print: "result: ", a, "\n";
             return;
         else;
@@ -162,13 +165,15 @@ fn: calculator, 0;
             endif;
         endif;
         GCD: a, b;
-        print: "result: ", return_value, "\n";
+        -get: a;
+        print: "result: ", a, "\n";
         return;
     endif;
 
     if: operation_type, ==, 8;
         LCM: a, b;
-        print: "result: ", return_value, "\n";
+        -get: a;
+        print: "result: ", a, "\n";
         return;
     endif;
 

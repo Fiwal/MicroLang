@@ -30,7 +30,7 @@ class PrintStatement(BaseStatement):
         for argument in self.arguments:
             if isinstance(argument, str) and (argument.count("`") == 2) and argument[0] == "`" and argument[-1] == "`":
                 continue
-            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.PARAMETER, NameType.RETURN_VALUE, NameType.INT_NUM, NameType.STRING_VARIABLE]:
+            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.INT_NUM, NameType.STRING_VARIABLE]:
                 raise Error(f"Wrong argument for print '{argument}' - line {self.line}")
 
     def generate_nasm_code(self):
@@ -38,18 +38,14 @@ class PrintStatement(BaseStatement):
         for argument in self.arguments:
             if check_name(argument, self.program, self.function) == NameType.STRING_VARIABLE:
                 nasm_code += (
-                    "mov r15, rax\n"
                     "mov rdi, fmt_str?\n"
                     f"mov rsi, {argument}\n"
                     "xor rax, rax\n"
-                    "call printf\n"
-                    "mov rax, r15\n")
+                    "call printf\n")
                 continue
             nasm_code += (
-                "mov r15, rax\n"
                 "mov rdi, fmt_int?\n"
                 f"mov rsi, {argument}\n"
                 "xor rax, rax\n"
-                "call printf\n"
-                "mov rax, r15\n")
+                "call printf\n")
         return nasm_code

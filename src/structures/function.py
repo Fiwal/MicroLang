@@ -36,7 +36,9 @@ class Function:
     def add_dollar_signs(self):
         for statement in self.statements_list:
             statement.add_dollar_sign()
-        for parameter in self.parameters:
-            parameter += "$"
+        for i in range(len(self.parameters)):
+            self.parameters[i] += "$"
+        for i in range(len(self.local_variables)):
+            self.local_variables[i] += "$"
         if self.name != "main":
             self.name += "$"

@@ -49,8 +49,7 @@ class CodeGenerator:
             "section .text\n"
             "global main\n"
             "extern printf\n"
-            "extern scanf\n"
-            "%define return_value rax\n")
+            "extern scanf\n")
         for function in self.program.functions:
             self.add_function(function)
 
@@ -75,8 +74,8 @@ class CodeGenerator:
                 self.add_assembly_code(f"mov parameter_{i}, {self.arguments_registers[i]}\n")
             else:
                 self.add_assembly_code(
-                    f"mov r15, [rbp+{16 + (i - 6) * 8}]\n"
-                    f"mov parameter_{i}, r15\n")
+                    f"mov r10, [rbp+{16 + (i - 6) * 8}]\n"
+                    f"mov parameter_{i}, r10\n")
 
     def end_function(self, function):
         self.add_assembly_code(".end:\n")
