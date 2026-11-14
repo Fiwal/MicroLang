@@ -6,4 +6,5 @@
 vscode-extension
 program
 program.o
+nasm_code.asm
 /.VSCodeCounter/
