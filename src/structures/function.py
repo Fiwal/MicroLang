@@ -1,5 +1,6 @@
 from src.utils import Stack
 from src.structures.statements import *
+from src.exceptions import Error
 
 
 class Function:
@@ -32,6 +33,10 @@ class Function:
             else:
                 self.statements_list.append(FunctionCallStatement(token, program, self))
             self.statements_list[-1].parse()
+        if not self.if_stack.is_empty():
+            raise Error(f"Unclosed if in function '{self.name}'")
+        if not self.loop_stack.is_empty():
+            raise Error(f"Unclosed loop in function '{self.name}'")
 
     def add_dollar_signs(self):
         for statement in self.statements_list:

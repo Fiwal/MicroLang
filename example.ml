@@ -29,13 +29,11 @@ endfn;
 fn: Euclidean_algorithm, 2;
     name_parameter: a, 0;
     name_parameter: b, 1;
-    int: c;
 
     if: b, !=, 0;
         mod: a, b;
         Euclidean_algorithm: b, a;
-        -get: c;
-        return: c;
+        return: return_value;
     endif;
 
     return: a;
@@ -59,8 +57,7 @@ fn: GCD, 2;
     endif;
 
     Euclidean_algorithm: a, b;
-    -get: a;
-    return: a;
+    return: return_value;
 endfn;
 
 fn: LCM, 2;
@@ -79,8 +76,7 @@ fn: LCM, 2;
     endif;
 
     Euclidean_algorithm: a, b;
-    -get: a;
-    div: c, a;
+    div: c, return_value;
     return: c;
 endfn;
 

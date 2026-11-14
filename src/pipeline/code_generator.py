@@ -49,7 +49,8 @@ class CodeGenerator:
             "section .text\n"
             "global main\n"
             "extern printf\n"
-            "extern scanf\n")
+            "extern scanf\n"
+            "%define return_value rax\n")
         for function in self.program.functions:
             self.add_function(function)
 

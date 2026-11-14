@@ -14,8 +14,8 @@ class Compiler:
         try:
             tokens = Lexer(self.input_file).tokenize()
             parsed_program = Parser(tokens).parse()
-            CodeGenerator(parsed_program, "output.asm").generate_nasm_code()
-            Builder("output.asm", self.output_file).build_executable()
+            CodeGenerator(parsed_program, "nasm_code.asm").generate_nasm_code()
+            Builder("nasm_code.asm", self.output_file).build_executable()
         except Error as e:
             print(f"\033[1;31mError: {e}\033[0m")
             return

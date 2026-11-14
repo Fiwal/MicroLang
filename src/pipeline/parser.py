@@ -40,6 +40,8 @@ class Parser:
             raise Error(f"Function cannot be inside another function - line {token.line}")
         if len(token.arguments) != 2:
             raise Error(f"Wrong number of arguments for fn: expected 2, got {len(token.arguments)} - line {token.line}")
+        if token.connected_tokens:
+            raise Error(f"Cannot connect instructions with fn - line {token.connected_tokens[0].line}")
         if check_name_type(token.arguments[0], self.program) != NameType.NOT_FOUND:
             raise Error(f"Multiple name '{token.arguments[0]}' - line {token.line}")
         if not is_valid_name(token.arguments[0]):
@@ -56,11 +58,8 @@ class Parser:
             raise Error(f"endfn without matching fn - line {token.line}")
         if len(token.arguments) != 0:
             raise Error(f"Wrong number of arguments for endfn: expected 0, got {len(token.arguments)} - line {token.line}")
-        function = self.get_current_function()
-        if function.if_stack.size() > 0:
-            raise Error(f"Unclosed if in function '{self.program.functions[-1].name}'")
-        if function.loop_stack.size() > 0:
-            raise Error(f"Unclosed loop in function '{self.program.functions[-1].name}'")
+        if token.connected_tokens:
+            raise Error(f"Cannot connect instructions with endfn - line {token.connected_tokens[0].line}")
         self.in_function_body = False
 
     def append_instruction(self, token):
@@ -76,6 +75,8 @@ class Parser:
                 raise Error(f"Only 'int' and 'string' instructions are allowed outside a function - line {token.line}")
 
     def append_int_global_var(self, token):
+        if token.connected_tokens:
+            raise Error(f"Cannot connect instructions with int - line {token.connected_tokens[0].line}")
         match len(token.arguments):
             case 1:
                 self.check_first_global_var_argument(token)
@@ -83,17 +84,19 @@ class Parser:
             case 2:
                 self.check_first_global_var_argument(token)
                 if not isinstance(token.arguments[1], int):
-                    raise Error(f"The value of the global int variable must be an integer, not an another variable or a float - line {token.line}")
+                    raise Error(f"The value of a global int variable must be an integer, not another variable or a float - line {token.line}")
                 self.program.initialized_global_variables.append(GlobalVar(token.arguments[0], VarType.INTEGER, token.arguments[1]))
             case _:
                 raise Error(f"Wrong number of arguments for int: expected 1 or 2, got {len(token.arguments)} - line {token.line}")
 
     def append_string_global_var(self, token):
+        if token.connected_tokens:
+            raise Error(f"Cannot connect instructions with string - line {token.connected_tokens[0].line}")
         if len(token.arguments) != 2:
-            raise Error(f"Wrong number of arguments for string: expected  2, got {len(token.arguments)} - line {token.line}")
+            raise Error(f"Wrong number of arguments for string: expected 2, got {len(token.arguments)} - line {token.line}")
         self.check_first_global_var_argument(token)
         if not isinstance(token.arguments[1], str) or (token.arguments[1].count("`") != 2) or token.arguments[1][0] != "`" or token.arguments[1][-1] != "`":
-            raise Error(f"The value of string must be in quotes, not be another variable or number - line {token.line}")
+            raise Error(f"The value of a string variable must be a quoted string - line {token.line}")
         self.program.initialized_global_variables.append(GlobalVar(token.arguments[0], VarType.STRING, token.arguments[1]))
 
     def check_first_global_var_argument(self, token):

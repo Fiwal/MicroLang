@@ -23,7 +23,7 @@ class IntStatement(BaseStatement):
             raise Error(f"Wrong variable name '{self.arguments[0]}' - line {self.line}")
         if not check_name(self.arguments[0], self.program, self.function) == NameType.NOT_FOUND:
             raise Error(f"Multiple name '{self.arguments[0]}' - line {self.line}")
-        if len(self.arguments) == 2 and not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.INT_NUM]:
+        if len(self.arguments) == 2 and not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.RETURN_VALUE, NameType.INT_NUM]:
             raise Error(f"Wrong second argument for int '{self.arguments[1]}' - line {self.line}")
 
     def generate_nasm_code(self):

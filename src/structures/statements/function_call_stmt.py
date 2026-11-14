@@ -25,7 +25,7 @@ class FunctionCallStatement(BaseStatement):
         if len(self.arguments) != expected_num_of_arguments:
             raise Error(f"Wrong number of arguments for {self.name}: expected {expected_num_of_arguments}, got {len(self.arguments)} - line {self.line}")
         for argument in self.arguments:
-            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.INT_NUM]:
+            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.RETURN_VALUE, NameType.INT_NUM]:
                 raise Error(f"Wrong argument for {self.name} '{argument}' - line {self.line}")
 
     def check_for_error_in_connected_tokens(self):
@@ -64,4 +64,3 @@ class FunctionCallStatement(BaseStatement):
         super().add_dollar_sign()
         if self.name != "main":
             self.name += "$"
-

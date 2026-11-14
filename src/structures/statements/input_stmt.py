@@ -14,7 +14,7 @@ class InputStatement(BaseStatement):
         if self.connected_tokens:
             raise Error(f"Cannot connect instructions with input - line {self.connected_tokens[0].line}")
         if check_name(self.arguments[0], self.program, self.function) not in [NameType.INT_VARIABLE]:
-            raise Error(f"Wrong argument '{self.arguments[0]}' - line {self.line}")
+            raise Error(f"Wrong argument for input '{self.arguments[0]}' - line {self.line}")
 
     def generate_nasm_code(self):
         return (

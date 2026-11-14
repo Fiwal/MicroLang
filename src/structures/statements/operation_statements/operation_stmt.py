@@ -15,5 +15,5 @@ class OperationStatement(BaseStatement):
             raise Error(f"Cannot connect instructions with {self.operation_name} - line {self.connected_tokens[0].line}")
         if not check_name(self.arguments[0], self.program, self.function) in [NameType.INT_VARIABLE]:
             raise Error(f"Wrong first argument for {self.operation_name} '{self.arguments[0]}' - line {self.line}")
-        if not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.INT_NUM]:
-            raise Error(f"Wrong argument '{self.arguments[1]}' - line {self.line}")
+        if not check_name(self.arguments[1], self.program, self.function) in [NameType.INT_VARIABLE, NameType.RETURN_VALUE, NameType.INT_NUM]:
+            raise Error(f"Wrong second argument for {self.operation_name} '{self.arguments[1]}' - line {self.line}")

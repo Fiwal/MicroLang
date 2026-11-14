@@ -30,7 +30,7 @@ class PrintStatement(BaseStatement):
         for argument in self.arguments:
             if isinstance(argument, str) and (argument.count("`") == 2) and argument[0] == "`" and argument[-1] == "`":
                 continue
-            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.INT_NUM, NameType.STRING_VARIABLE]:
+            if check_name(argument, self.program, self.function) not in [NameType.INT_VARIABLE, NameType.RETURN_VALUE, NameType.INT_NUM, NameType.STRING_VARIABLE]:
                 raise Error(f"Wrong argument for print '{argument}' - line {self.line}")
 
     def generate_nasm_code(self):

@@ -26,4 +26,7 @@ def check_name_type(name, program, current_function = None):
             if var.type == VarType.STRING:
                 return NameType.STRING_VARIABLE
 
+    if name == "return_value":
+        return NameType.RETURN_VALUE
+
     return NameType.NOT_FOUND
