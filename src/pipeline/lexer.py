@@ -9,7 +9,7 @@ class Lexer:
 
     def __init__(self, source_path):
         self.source_path = source_path
-        with open(source_path) as f:
+        with open(source_path, 'r', encoding='utf-8', errors='replace') as f:
             self.source = f.read()
         self.buffer = ""
         self.tokens = []

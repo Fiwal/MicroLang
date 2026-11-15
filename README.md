@@ -6,8 +6,7 @@ builds a Linux executable with GCC.
 
 ## Requirements and compiling files
 
-The project requires Python 3, NASM, and GCC on Linux. The generated program
-is an x86-64 Linux executable.
+The generated program is an x86-64 Linux executable. Even when using the standalone `MicroLang` binary, **NASM** and **GCC** must be installed on your Linux system because `MicroLang` uses them under the hood to assemble and link the executable.
 
 ### Install the required tools
 
@@ -15,40 +14,53 @@ On Debian or Ubuntu:
 
 ```bash
 sudo apt update
-sudo apt install python3 nasm gcc
+sudo apt install nasm gcc
 ```
 
 On Fedora:
 
 ```bash
-sudo dnf install python3 nasm gcc
+sudo dnf install nasm gcc
 ```
 
 On Arch Linux:
 
 ```bash
-sudo pacman -S python nasm gcc
+sudo pacman -S nasm gcc
 ```
 
 Check that the tools are available:
 
 ```bash
-python3 --version
 nasm -v
 gcc --version
 ```
 
-### Compile a source file
+*(Note: Python 3 is only required if you run the compiler from source code via `python3 main.py`.)*
+
+### Getting the `MicroLang` compiler
+
+1. Download the `MicroLang` binary from the **Releases** tab on GitHub.
+2. Place the `MicroLang` executable directly in your project directory (or in a folder included in your system `$PATH`).
+3. Ensure it has execution permissions:
 
 ```bash
-python3 main.py path/to/program.ml
+chmod +x MicroLang
+```
+
+### Compile a source file
+
+Run `MicroLang` with the path to your source file:
+
+```bash
+./MicroLang path/to/program.ml
 ./program
 ```
 
 If no path is supplied, the compiler asks for one interactively:
 
 ```bash
-python3 main.py
+./MicroLang
 Enter file path: path/to/program.ml
 ```
 
@@ -60,9 +72,14 @@ The current command-line compiler always creates:
 | `program.o` | Object file created by NASM. |
 | `program` | Final executable. |
 
-`main.py` checks that the supplied file exists before compilation. At the
+`MicroLang` checks that the supplied file exists before compilation. At the
 moment `program`, `program.o`, and `nasm_code.asm` are overwritten on every
 successful compilation.
+
+> **Note (Running from source):** If you cloned the repository and want to run without the standalone binary, you can still execute:
+> ```bash
+> python3 main.py path/to/program.ml
+> ```
 
 ## Basic syntax
 
