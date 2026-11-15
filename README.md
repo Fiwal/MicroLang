@@ -220,21 +220,21 @@ endloop;
 
 ## Instructions
 
-| Instruction | Meaning |
-| --- | --- |
-| `fn: name, count;` / `endfn;` | Defines a function. |
-| `name_parameter: name, index;` | Names a function parameter. |
-| `int: name[, value];` | Declares an integer. |
-| `string: name, value;` | Declares a global string. |
-| `set: variable, value;` | Assigns an integer value. |
-| `add`, `sub`, `mul`, `div`, `mod` | Modifies an integer variable. |
-| `print: value[, ...];` | Prints integers and strings. |
-| `input: variable;` | Reads an integer. |
+| Instruction                                       | Meaning |
+|---------------------------------------------------| --- |
+| `fn: name, count;` / `endfn;`                     | Defines a function. |
+| `name_parameter: name, index;`                    | Names a function parameter. |
+| `int: name, [value];`                             | Declares an integer. |
+| `string: name, value;`                            | Declares a global string. |
+| `set: variable, value;`                           | Assigns an integer value. |
+| `add`, `sub`, `mul`, `div`, `mod`                 | Modifies an integer variable. |
+| `print: value, [...];`                            | Prints integers and strings. |
+| `input: variable;`                                | Reads an integer. |
 | `if: left, operator, right;` / `else;` / `endif;` | Conditional block. |
-| `loop;` / `break;` / `endloop;` | Loop control. |
-| `return[: value];` | Returns from a function; no value returns `0`. |
-| `function: argument[, ...];` | Calls a user-defined function. |
-| `-get: variable;` | Copies the preceding call's result into a variable. |
+| `loop;` / `break;` / `endloop;`                   | Loop control. |
+| `return: [value];`                                | Returns from a function; no value returns `0`. |
+| `function: argument, [...];`                      | Calls a user-defined function. |
+| `-get: variable;`                                 | Copies the preceding call's result into a variable. |
 
 ## Current limitations
 
